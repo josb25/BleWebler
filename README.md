@@ -4,9 +4,9 @@ BleWebler is a lightweight, browser-based label printing tool that connects to B
 Features
   - Bluetooth LE connection via Web Bluetooth API
   - Direct printing to compatible label printers
-  - Runs entirely in the browser – no installation required
-  - Modular structure – ready to support more printer models
-  - Open source and privacy-friendly – nothing is sent to any server
+  - Runs entirely in the browser: No installation required
+  - Modular structure: Ready to support more printer models
+  - Open source and privacy-friendly: Nothing is sent to any server
 
 Use Cases
   - Creating labels on mobile or desktop without proprietary apps
