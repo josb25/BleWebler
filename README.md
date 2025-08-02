@@ -20,8 +20,10 @@ Requirements
   - A user-initiated connection (via button click, due to Web Bluetooth restrictions)
 
 Future Plans
-  - Support for multiple printer models and brands
-  - Label preview and templates
+  - Support for more printer models and brands
+  - Label preview
+  - Ability to import bitmaps
+  - Print QR- and Barcodes
 
 
 Licensed under the GPLv3 License.
