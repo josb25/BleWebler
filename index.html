@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title> BleWebler - Open Source BLE Web Labeler </title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>BleWebler</h1>
+
+    <label for="labelText">Text:</label>
+    <input type="text" id="labelText" placeholder="Input text" value="" />
+
+    <label for="fontSize">Font size (px):</label>
+    <input type="number" id="fontSize" value="48" min="1" />
+
+    <label for="fontFamily">Font:</label>
+    <input type="text" id="fontFamily" value="Arial" placeholder="e. g. Arial" />
+
+    <div class="options">
+      <label><input type="checkbox" id="bold" checked /> Bold</label>
+      <label><input type="checkbox" id="italic" /> Italic</label>
+      <label><input type="checkbox" id="underline" /> Underline</label>
+    </div>
+
+    <button onclick="printLabel()">Print!</button>
+
+    <button class="advanced-toggle" onclick="toggleAdvanced()">Show Advanced</button>
+    <div id="advancedSection" style="display: none; margin-top: 1em;">
+      <button onclick="disconnectPrinter()">Disconnect</button>
+      <pre id="logOutput" style="text-align: left; background: #eee; padding: 0.5em; margin-top: 1em; height: 150px; overflow: auto;"></pre>
+    </div>
+  </div>
+
+  <script src="js/marklife_p12.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/utils.js" defer></script>
+</body>
+</html>
