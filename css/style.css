@@ -1,8 +1,30 @@
+/* =========================================
+   Design tokens
+   ========================================= */
+:root {
+  --control-h: 44px;       /* canonical height for single-line inputs & buttons */
+  --border-w: 1px;         /* standard border width */
+  --radius: 6px;           /* standard border radius */
+  --pad-x: 0.75em;         /* horizontal padding for controls */
+  --font-size: 1rem;       /* base font size for form controls */
+  --line-tight: 1.2;       /* line-height for single-line controls */
+  --line-body: 1.25;       /* line-height for multi-line text */
+  --c-bg: #fff;            /* control background */
+  --c-bdr: #ccc;           /* control border */
+  --c-text: #000;          /* control text color */
+  --btn-bg: #333;          /* button bg */
+  --btn-bg-hover: #555;    /* button hover bg */
+}
+
+/* =========================================
+   Page basics
+   ========================================= */
 body {
   font-family: sans-serif;
   margin: 1em;
   padding: 0;
-  text-align: center;
+  text-align: center; /* page layout only; controls reset to left below */
+  color: var(--c-text);
 }
 
 .container {
@@ -11,54 +33,126 @@ body {
   padding: 1em;
 }
 
-input[type="text"],
-input[type="number"],
-input[type="button"],
-select,
-button {
-  width: 100%;
-  max-width: 100%;
-  margin: 0.5em 0;
-  padding: 0.75em;
-  font-size: 1em;
+/* =========================================
+   Form control reset & shared typography
+   (Prevents body{text-align:center} from affecting inputs)
+   ========================================= */
+input, select, textarea, button {
+  font: inherit;
+  font-size: var(--font-size);
+  color: inherit;
+  letter-spacing: inherit;
+  text-align: left; /* ensure text inside controls is left-aligned */
   box-sizing: border-box;
 }
 
-label {
-  display: block;
-  text-align: left;
-  margin-top: 1em;
-  font-weight: bold;
+/* Make action buttons auto-width and centered */
+button,
+input[type="button"] {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.5em auto;            /* centers the button in the container */
+  padding: 0 1em;
 }
 
-.options {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5em;
-  margin-top: 0.5em;
+/* Keep form fields full-width */
+.container input[type="text"],
+.container input[type="number"],
+.container select,
+.container textarea {
+  width: 100%;
+  max-width: 100%;
 }
 
-.options label {
-  font-weight: normal;
-  flex: 1 1 auto;
-  white-space: nowrap;
+
+
+/* =========================================
+   Single-line controls (text inputs, select)
+   Visual height is controlled by explicit height
+   with vertical padding calculated for optical centering.
+   ========================================= */
+input[type="text"],
+input[type="number"],
+select {
+  height: var(--control-h);
+  width: 100%;
+  max-width: 100%;
+  margin: 0.5em 0;
+
+  /* Use a normal line-height (readable), do NOT bind it to height */
+  line-height: var(--line-tight);
+
+  /* Vertical centering via padding-block:
+     height - (font-size * line-height) - borders -> split by two */
+  padding-inline: var(--pad-x);
+  padding-block: calc((var(--control-h) - (1em * var(--line-tight)) - (2 * var(--border-w))) / 2);
+
+  border: var(--border-w) solid var(--c-bdr);
+  border-radius: var(--radius);
+  background: var(--c-bg);
+  appearance: none;
+  -webkit-appearance: none;
+  transition: background 0.2s;
 }
 
-button {
-  background-color: #333;
-  color: #fff;
+/* =========================================
+   Multi-line control (textarea)
+   Behaves like a proper multi-line field with
+   comfortable line-height and padding.
+   ========================================= */
+textarea {
+  width: 100%;
+  max-width: 100%;
+  margin: 0.5em 0;
+
+  /* Let height grow with content (JS can enhance to true auto-resize) */
+  height: auto;
+  min-height: var(--control-h);
+  resize: none;             /* allow user to adjust vertically */
+
+  line-height: var(--line-body);
+  padding: 0.35em var(--pad-x); /* subtle top/bottom breathing room */
+
+  border: var(--border-w) solid var(--c-bdr);
+  border-radius: var(--radius);
+  background: var(--c-bg);
+  appearance: none;
+  -webkit-appearance: none;
+  transition: background 0.2s;
+
+  /* Prevent a few extra pixels from a vertical scrollbar until needed */
+  overflow-y: hidden;
+}
+
+/* =========================================
+   Buttons
+   ========================================= */
+button,
+input[type="button"] {
+  height: var(--control-h);
+  width: 100%;
+  max-width: 100%;
+  margin: 0.5em 0;
+  padding: 0 1em;               /* horizontal padding; height fixes vertical */
+
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius);
+  background: var(--btn-bg);
+  color: #fff;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
-button:hover {
-  background-color: #555;
+button:hover,
+input[type="button"]:hover {
+  background: var(--btn-bg-hover);
 }
 
+/* Text-only, subtle action button (e.g., "Advanced") */
 .advanced-toggle {
-  background-color: transparent;
+  background: transparent;
   color: #666;
   font-size: 0.9em;
   border: none;
@@ -66,8 +160,123 @@ button:hover {
   text-decoration: underline;
   cursor: pointer;
 }
-
 .advanced-toggle:hover {
-  background-color: transparent; /* no dark background */
-  color: #000; /* darker on hover for contrast */
+  background: transparent;
+  color: #000;
+}
+
+/* =========================================
+   Labels
+   ========================================= */
+label {
+  display: block;
+  text-align: left;
+  margin-top: 1em;
+  font-weight: bold;
+}
+
+/* =========================================
+   Options row (checkboxes, radios, small inputs)
+   ========================================= */
+.options {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin-top: 0.5em;
+}
+.options label {
+  font-weight: normal;
+  flex: 1 1 auto;
+  white-space: nowrap;
+}
+
+/* =========================================
+   Input group (text field + upload button in one row)
+   ========================================= */
+.input-group {
+  display: flex;
+  align-items: center;  /* vertical centering of the two items */
+  gap: 0.5em;
+  margin: 0.5em 0;
+}
+
+/* Inline label inside the group acts like a button (e.g., upload) */
+.input-group > label {
+  display: inline-flex;
+  margin-top: 0;        /* override global label margin */
+  text-align: center;
+  font-weight: normal;
+}
+
+/* Left side: single-line input inside the group */
+.input-group .input {
+  flex: 1;
+  width: auto;          /* let flex decide width */
+  height: var(--control-h);
+  line-height: var(--line-tight);
+  padding-inline: var(--pad-x);
+  padding-block: calc((var(--control-h) - (1em * var(--line-tight)) - (2 * var(--border-w))) / 2);
+
+  border: var(--border-w) solid var(--c-bdr);
+  border-radius: var(--radius);
+  background: var(--c-bg);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* If the left control is a textarea, keep it multi-line (do NOT force 44px) */
+.input-group textarea.input {
+  height: var(--control-h);
+  min-height: var(--control-h);
+  line-height: var(--line-body);
+  padding: 0.75em var(--pad-x);
+  overflow-y: hidden;
+}
+
+/* Right side: upload button styled like a primary button */
+.btn.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-h);
+  padding: 0 1em;
+  background: var(--btn-bg);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn.upload-btn:hover { background: var(--btn-bg-hover); }
+
+.btn.upload-btn svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* =========================================
+   Accessible "visually hidden" utility
+   ========================================= */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+
+
+#labelPreview {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border: 1px solid #bbb;
+  background: #fff;
 }
