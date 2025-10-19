@@ -50,7 +50,7 @@ async function printLabel() {
 
     if (printer) {
       log(`Detected printer: ${device.name} -> matched ${printer.name}`);
-      await printer.handler(device, constructBitmap(printer.px));
+      await printer.handler(device, constructBitmap(printer.px), document.getElementById("segmentedPaper").checked);
     } else {
       log(`Unsupported printer model: ${device.name}`);
     }

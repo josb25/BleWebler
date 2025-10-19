@@ -1,6 +1,6 @@
 const canvasHeight = 96;
 
-async function printLabelOnP12(device, bitmap) {
+async function printLabelOnP12(device, bitmap, segmentedPaper = false) {
     const canvasWidth = bitmap[0].length
 
     const payload = bitmapToPacket(bitmap, canvasWidth);
@@ -15,7 +15,7 @@ async function printLabelOnP12(device, bitmap) {
 
         log(device.name + " (" + device.id + ") connected: " + device.gatt.connected);
 
-        const packets = [
+        var packets = [
         Uint8Array.from([0x10, 0xff, 0x40]), // initialization packet
         Uint8Array.from([
             ...new Array(15).fill(0x00),
@@ -26,6 +26,18 @@ async function printLabelOnP12(device, bitmap) {
             canvasWidth & 0xff, (canvasWidth >> 8) & 0xff
         ]),
         payload,
+        ];
+
+        if (segmentedPaper){
+          packets.push(
+            Uint8Array.from([0x1d, 0x0c, 0x10]),
+            Uint8Array.from([0xff, 0xf1, 0x45]),
+            Uint8Array.from([0x10, 0xff, 0x40]),
+            Uint8Array.from([0x10, 0xff, 0x40]),
+          )
+        }
+        else {
+          packets.push(
         Uint8Array.from([0x1b, 0x4a, 0x5B]), // purge
         Uint8Array.from([0x10, 0xff, 0xf1, 0x45]) // end
         ];
