@@ -40,7 +40,8 @@ async function printLabelOnP12(device, bitmap, segmentedPaper = false) {
           packets.push(
         Uint8Array.from([0x1b, 0x4a, 0x5B]), // purge
         Uint8Array.from([0x10, 0xff, 0xf1, 0x45]) // end
-        ];
+          )     
+        }
 
         for (const p of packets) {
         const chunks = splitIntoChunks(p, 96);
