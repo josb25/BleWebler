@@ -10,6 +10,16 @@
   <div class="container">
     <h1>BleWebler</h1>
 
+    <!-- <label for="labelType">Type of Content:</label> -->
+    <div class="label-type-selector">
+      <button class="label-type-btn active" data-type="text">Text</button>
+      <button class="label-type-btn" data-type="bitmap">Image</button>
+      <button class="label-type-btn" data-type="qrcode">QR-Code</button>
+      <button class="label-type-btn" data-type="info">Info</button>
+    </div>
+
+
+    <div id="textOptions">
     <label for="labelText">Text:</label>
     <input type="text" id="labelText" placeholder="Input text" value="" />
 
@@ -20,10 +30,25 @@
     <input type="text" id="fontFamily" value="Arial" placeholder="e. g. Arial" />
 
     <div class="options">
-      <label><input type="checkbox" id="bold" checked /> Bold</label>
-      <label><input type="checkbox" id="italic" /> Italic</label>
-      <label><input type="checkbox" id="underline" /> Underline</label>
-        <label><input type="checkbox" id="segmentedPaper" /> Segmented Paper</label>
+        <label><input type="checkbox" id="bold" checked />Bold</label>
+        <label><input type="checkbox" id="italic" />Italic</label>
+        <label><input type="checkbox" id="underline" />Underline</label>
+        <label><input type="checkbox" id="segmentedPaper" />Segmented Paper</label>
+      </div>
+    </div>
+
+    <div id="imageOptions" style="display:none;">
+      <label>Work in Progress.</label>
+    </div>
+
+    <div id="qrcodeOptions" style="display:none;">
+      <label>Work in Progress.</label>
+      <!-- QR-Code input & options -->
+    </div>
+
+    <div id="infoOptions" style="display:none;">
+      <label>Work in Progress.</label>
+      <!-- Info about printer -->
     </div>
 
     <button onclick="printLabel()">Print!</button>
