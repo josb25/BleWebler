@@ -1,6 +1,6 @@
 let canvas;
 let fontSizeInput;
-let fontFamilyInput;
+let fontFamilySelect; // Changed from fontFamilyInput
 let boldCheckbox;
 let italicCheckbox;
 let underlineCheckbox;
@@ -8,11 +8,11 @@ let underlineCheckbox;
 document.addEventListener("DOMContentLoaded", () => {
   canvas = new fabric.Canvas('fabricCanvas');
   canvas.setHeight(96); // Printer height
-  canvas.setWidth(384); // Max width for a label
+  canvas.setWidth(320); // Max width for a label
 
   // Get references to control elements
   fontSizeInput = document.getElementById('fontSize');
-  fontFamilyInput = document.getElementById('fontFamily');
+  fontFamilySelect = document.getElementById('fontFamilySelect'); // Changed from fontFamilyInput
   boldCheckbox = document.getElementById('bold');
   italicCheckbox = document.getElementById('italic');
   underlineCheckbox = document.getElementById('underline');
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const initialText = new fabric.IText(document.getElementById('newTextContent').value || 'Hello World', {
     left: 50,
     top: 20,
-    fontFamily: fontFamilyInput.value || 'Arial',
+    fontFamily: fontFamilySelect.value || 'Arial', // Use fontFamilySelect
     fontSize: parseFloat(fontSizeInput.value) || 48,
     fill: '#000000',
   });
@@ -35,8 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
   canvas.on('object:modified', updateTextControls); // Update controls when object is modified (e.g., scaled)
 
   // Event listeners for styling controls
-  fontSizeInput.addEventListener('change', applyTextProperties);
-  fontFamilyInput.addEventListener('change', applyTextProperties);
+  // fontSizeInput.addEventListener('change', applyTextProperties); // Handled in ui.js
+  // fontFamilySelect.addEventListener('change', applyTextProperties); // Handled in ui.js
   boldCheckbox.addEventListener('change', applyTextProperties);
   italicCheckbox.addEventListener('change', applyTextProperties);
   underlineCheckbox.addEventListener('change', applyTextProperties);
@@ -49,7 +49,7 @@ function addTextToCanvas() {
   const newText = new fabric.IText(textContent, {
     left: 50,
     top: 50,
-    fontFamily: fontFamilyInput.value || 'Arial',
+    fontFamily: fontFamilySelect.value || 'Arial', // Use fontFamilySelect
     fontSize: parseFloat(fontSizeInput.value) || 48,
     fill: '#000000',
     fontWeight: boldCheckbox.checked ? 'bold' : 'normal',
@@ -77,7 +77,7 @@ function applyTextProperties() {
     const newFontSize = parseFloat(fontSizeInput.value);
     activeObject.set({
       fontSize: newFontSize,
-      fontFamily: fontFamilyInput.value || activeObject.fontFamily,
+      fontFamily: fontFamilySelect.value || activeObject.fontFamily, // Use fontFamilySelect
       fontWeight: boldCheckbox.checked ? 'bold' : 'normal',
       fontStyle: italicCheckbox.checked ? 'italic' : 'normal',
       underline: underlineCheckbox.checked,
@@ -95,7 +95,7 @@ function updateTextControls() {
   if (activeObject && activeObject.type === 'i-text') {
     const effectiveFontSize = Math.round(activeObject.fontSize * activeObject.scaleY);
     fontSizeInput.value = effectiveFontSize;
-    fontFamilyInput.value = activeObject.fontFamily;
+    fontFamilySelect.value = activeObject.fontFamily; // Update fontFamilySelect
     boldCheckbox.checked = activeObject.fontWeight === 'bold';
     italicCheckbox.checked = activeObject.fontStyle === 'italic';
     underlineCheckbox.checked = activeObject.underline;
@@ -107,7 +107,7 @@ function updateTextControls() {
 function clearTextControls() {
   // Reset to default or clear when no text object is selected
   fontSizeInput.value = '48';
-  fontFamilyInput.value = 'Arial';
+  fontFamilySelect.value = 'Arial'; // Reset fontFamilySelect
   boldCheckbox.checked = false;
   italicCheckbox.checked = false;
   underlineCheckbox.checked = false;
@@ -167,5 +167,33 @@ window.fabricEditor = {
       activeObject.set({ top: newTop });
       canvas.renderAll();
     }
+  },
+
+  setFontFamily: function(fontFamily) {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject && activeObject.type === 'i-text') {
+      activeObject.set({ fontFamily: fontFamily });
+      canvas.renderAll();
+      updateTextControls(); // Update UI to reflect change
+    }
+  },
+
+  setFontSize: function(fontSize) {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject && activeObject.type === 'i-text') {
+      activeObject.set({ fontSize: fontSize });
+      canvas.renderAll();
+      updateTextControls(); // Update UI to reflect change
+    }
+  },
+
+  getActiveObject: function() {
+    return canvas.getActiveObject();
+  },
+
+  // This method will be called when an object on the canvas is selected to update the UI controls.
+  // It's exposed so ui.js can trigger it if needed, though canvas.on('selection:...') already handles it.
+  updateUiControls: function() {
+    updateTextControls();
   }
 };

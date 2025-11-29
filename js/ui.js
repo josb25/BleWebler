@@ -8,8 +8,91 @@ function toggleAdvanced() {
 }
 
 
+function setVerticalAlign(alignment) {
+  if (window.fabricEditor) {
+    window.fabricEditor.setVerticalAlign(alignment);
+  }
+}
+
+// Function to update the font family in fabric editor
+function updateFontFamily(fontFamily) {
+  if (window.fabricEditor) {
+    window.fabricEditor.setFontFamily(fontFamily);
+  }
+}
+
+// Function to update the font size in fabric editor
+function updateFontSize(fontSize) {
+  if (window.fabricEditor) {
+    window.fabricEditor.setFontSize(fontSize);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const buttons = document.querySelectorAll(".label-type-btn");
+  const fontFamilySelect = document.getElementById("fontFamilySelect");
+  const loadSystemFontsBtn = document.getElementById("loadSystemFontsBtn");
+  const fontSizeInput = document.getElementById("fontSize");
+
+  // Basic web-safe fonts
+  const basicFonts = ["Arial", "Verdana", "Times New Roman", "Courier New", "Georgia", "Impact", "Tahoma", "Trebuchet MS"];
+
+  function populateFontDropdown(fonts) {
+    fontFamilySelect.innerHTML = ""; // Clear existing options
+    fonts.forEach(font => {
+      const option = document.createElement("option");
+      option.value = font;
+      option.textContent = font;
+      fontFamilySelect.appendChild(option);
+    });
+    // Set initial value
+    if (window.fabricEditor && window.fabricEditor.getActiveObject()) {
+      fontFamilySelect.value = window.fabricEditor.getActiveObject().fontFamily;
+    } else {
+      fontFamilySelect.value = "Arial"; // Default
+    }
+  }
+
+  // Populate with basic fonts on load
+  populateFontDropdown(basicFonts);
+
+  // Event listener for font family change
+  fontFamilySelect.addEventListener("change", (event) => {
+    updateFontFamily(event.target.value);
+  });
+
+  // Event listener for font size change
+  if (fontSizeInput) {
+    fontSizeInput.addEventListener("change", (event) => {
+      updateFontSize(parseInt(event.target.value, 10));
+    });
+  }
+
+  // Event listener for loading system fonts
+  if (loadSystemFontsBtn) {
+    // Hide button if API not supported
+    if (!('queryLocalFonts' in window)) {
+      loadSystemFontsBtn.style.display = 'none';
+    }
+
+    loadSystemFontsBtn.addEventListener("click", async () => {
+      if ('queryLocalFonts' in window) {
+        try {
+          const systemFonts = await window.queryLocalFonts();
+          const fontNames = systemFonts.map(font => font.family).filter((value, index, self) => self.indexOf(value) === index); // Get unique font names
+          populateFontDropdown([...basicFonts, ...fontNames].filter((value, index, self) => self.indexOf(value) === index).sort()); // Merge, make unique, sort, and repopulate
+          loadSystemFontsBtn.style.display = 'none'; // Hide button after successful load
+        } catch (err) {
+          console.error("Error querying local fonts:", err);
+          alert("Failed to load system fonts. Please check console for details.");
+        }
+      } else {
+        // This else block might be redundant if the button is already hidden, but good for explicit handling
+        alert("Your browser does not support the Local Font Access API.");
+        loadSystemFontsBtn.style.display = 'none';
+      }
+    });
+  }
 
   buttons.forEach(btn => {
     btn.addEventListener("click", () => {
