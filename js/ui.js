@@ -46,4 +46,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialen Zustand setzen
   const activeBtn = document.querySelector(".label-type-btn.active");
   if (activeBtn) activeBtn.click(); // löst Anzeige der Text-Optionen aus
+
+  // Add event listener for the print button
+  const printButton = document.getElementById("printButton");
+  if (printButton) {
+    printButton.addEventListener("click", printLabel);
+  }
 });

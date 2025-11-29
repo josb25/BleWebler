@@ -20,17 +20,15 @@
 
 
     <div id="textOptions">
-    <label for="labelText">Text:</label>
-    <input type="text" id="labelText" placeholder="Input text" value="" />
+      <canvas id="fabricCanvas" width="384" height="96" style="border:1px solid #ccc;"></canvas>
+      <div style="margin-top: 10px;">
+        <input type="text" id="newTextContent" placeholder="Enter text" value="Hello World" />
+        <button onclick="addTextToCanvas()">Add Text</button>
+        <button onclick="deleteSelectedObject()">Delete Selected</button>
+      </div>
 
-    <label for="fontSize">Font size (px):</label>
-    <input type="number" id="fontSize" value="48" min="1" />
-
-    <label for="fontFamily">Font:</label>
-    <input type="text" id="fontFamily" value="Arial" placeholder="e. g. Arial" />
-
-    <div class="options">
-        <label><input type="checkbox" id="bold" checked />Bold</label>
+      <div class="options">
+        <label><input type="checkbox" id="bold" />Bold</label>
         <label><input type="checkbox" id="italic" />Italic</label>
         <label><input type="checkbox" id="underline" />Underline</label>
         <label><input type="checkbox" id="segmentedPaper" />Segmented Paper</label>
@@ -51,7 +49,7 @@
       <!-- Info about printer -->
     </div>
 
-    <button onclick="printLabel()">Print!</button>
+    <button id="printButton">Print!</button>
 
     <button class="advanced-toggle" onclick="toggleAdvanced()">Show Advanced</button>
     <div id="advancedSection" style="display: none; margin-top: 1em;">
@@ -63,5 +61,7 @@
   <script src="js/marklife_p12.js" defer></script>
   <script src="js/ui.js" defer></script>
   <script src="js/utils.js" defer></script>
+  <script src="js/fabric.min.js" defer></script>
+  <script src="js/fabric_editor.js" defer></script>
 </body>
 </html>

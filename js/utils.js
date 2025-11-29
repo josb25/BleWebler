@@ -88,42 +88,25 @@ function disconnectPrinter() {
 }
 
 function constructBitmap(canvasHeight) {
-    const text = document.getElementById("labelText").value || "";
-    const fontSize = parseFloat(document.getElementById("fontSize").value);
-    const fontFamily = document.getElementById("fontFamily").value || "Arial";
-    const isBold = document.getElementById("bold").checked;
-    const isItalic = document.getElementById("italic").checked;
-    const isUnderline = document.getElementById("underline").checked;
-
-    const font = `${isItalic ? "italic " : ""}${isBold ? "bold " : ""}${fontSize}px "${fontFamily}"`;
-
-    log("Font string: " + font);
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    ctx.font = font;
-    const textWidth = Math.ceil(ctx.measureText(text).width);
-    const canvasWidth = textWidth;
-
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "#000000";
-    ctx.font = font;
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, 0, canvasHeight / 2);
-
-    if (isUnderline) {
-        const underlineY = (canvasHeight / 2) + fontSize / 2;
-        const underlineWidth = ctx.measureText(text).width;
-        ctx.fillRect(0, underlineY, underlineWidth, 1);
+    const fabricCanvas = getFabricCanvas();
+    if (!fabricCanvas) {
+        log("Fabric.js canvas not initialized.");
+        return null;
     }
 
-    const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight).data;
+    const tempCanvas = document.createElement("canvas");
+    const tempCtx = tempCanvas.getContext("2d");
+
+    const canvasWidth = fabricCanvas.width; // Use Fabric canvas width
+    tempCanvas.width = canvasWidth;
+    tempCanvas.height = canvasHeight;
+
+    // Render the fabric canvas content onto the temporary canvas
+    fabricCanvas.backgroundColor = '#ffffff'; // Ensure white background
+    fabricCanvas.renderAll(); // Re-render to ensure background is applied if needed
+    tempCtx.drawImage(fabricCanvas.getElement(), 0, 0, canvasWidth, canvasHeight);
+
+    const imgData = tempCtx.getImageData(0, 0, canvasWidth, canvasHeight).data;
 
     const bitmap = [];
     for (let y = 0; y < canvasHeight; y++) {
@@ -137,3 +120,4 @@ function constructBitmap(canvasHeight) {
     }
     return bitmap
 }
+
