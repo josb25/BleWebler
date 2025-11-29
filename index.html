@@ -60,6 +60,15 @@
         <label for="imageUploadInput">Upload Image:</label>
         <input type="file" id="imageUploadInput" accept="image/*" />
       </div>
+
+      <div style="margin-top: 10px;" id="ditheringOptions" style="display:none;">
+        <label for="ditheringAlgorithmSelect">Dithering Algorithm:</label>
+        <select id="ditheringAlgorithmSelect">
+          <option value="none">None</option>
+          <option value="floyd-steinberg">Floyd-Steinberg</option>
+          <!-- Add other dithering algorithms here later -->
+        </select>
+      </div>
     </div>
 
     <div id="qrcodeOptions" style="display:none;">
@@ -86,5 +95,6 @@
   <script src="js/fabric_editor.js" defer></script>
   <script src="js/ui.js" defer></script>
   <script src="js/utils.js" defer></script>
+  <script src="js/dithering.js" defer></script>
 </body>
 </html>
