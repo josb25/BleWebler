@@ -1,6 +1,6 @@
 let canvas;
 let fontSizeInput;
-let fontFamilySelect; // Changed from fontFamilyInput
+let fontFamilyInput;
 let boldCheckbox;
 let italicCheckbox;
 let underlineCheckbox;
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Get references to control elements
   fontSizeInput = document.getElementById('fontSize');
-  fontFamilySelect = document.getElementById('fontFamilySelect'); // Changed from fontFamilyInput
+  fontFamilyInput = document.getElementById('fontFamilyInput');
   boldCheckbox = document.getElementById('bold');
   italicCheckbox = document.getElementById('italic');
   underlineCheckbox = document.getElementById('underline');
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const initialText = new fabric.IText(document.getElementById('newTextContent').value || 'Hello World', {
     left: 50,
     top: 20,
-    fontFamily: fontFamilySelect.value || 'Arial', // Use fontFamilySelect
+    fontFamily: fontFamilyInput.value || 'Arial', // Use fontFamilySelect
     fontSize: parseFloat(fontSizeInput.value) || 48,
     fill: '#000000',
   });
@@ -49,7 +49,7 @@ function addTextToCanvas() {
   const newText = new fabric.IText(textContent, {
     left: 50,
     top: 50,
-    fontFamily: fontFamilySelect.value || 'Arial', // Use fontFamilySelect
+    fontFamily: fontFamilyInput.value || 'Arial', // Use fontFamilySelect
     fontSize: parseFloat(fontSizeInput.value) || 48,
     fill: '#000000',
     fontWeight: boldCheckbox.checked ? 'bold' : 'normal',
@@ -77,7 +77,7 @@ function applyTextProperties() {
     const newFontSize = parseFloat(fontSizeInput.value);
     activeObject.set({
       fontSize: newFontSize,
-      fontFamily: fontFamilySelect.value || activeObject.fontFamily, // Use fontFamilySelect
+      fontFamily: fontFamilyInput.value || activeObject.fontFamily, // Use fontFamilySelect
       fontWeight: boldCheckbox.checked ? 'bold' : 'normal',
       fontStyle: italicCheckbox.checked ? 'italic' : 'normal',
       underline: underlineCheckbox.checked,
@@ -95,7 +95,7 @@ function updateTextControls() {
   if (activeObject && activeObject.type === 'i-text') {
     const effectiveFontSize = Math.round(activeObject.fontSize * activeObject.scaleY);
     fontSizeInput.value = effectiveFontSize;
-    fontFamilySelect.value = activeObject.fontFamily; // Update fontFamilySelect
+    fontFamilyInput.value = activeObject.fontFamily; // Update fontFamilySelect
     boldCheckbox.checked = activeObject.fontWeight === 'bold';
     italicCheckbox.checked = activeObject.fontStyle === 'italic';
     underlineCheckbox.checked = activeObject.underline;
@@ -107,7 +107,7 @@ function updateTextControls() {
 function clearTextControls() {
   // Reset to default or clear when no text object is selected
   fontSizeInput.value = '48';
-  fontFamilySelect.value = 'Arial'; // Reset fontFamilySelect
+  fontFamilyInput.value = 'Arial'; // Reset fontFamilySelect
   boldCheckbox.checked = false;
   italicCheckbox.checked = false;
   underlineCheckbox.checked = false;

@@ -30,7 +30,8 @@ function updateFontSize(fontSize) {
 
 document.addEventListener("DOMContentLoaded", () => {
   const buttons = document.querySelectorAll(".label-type-btn");
-  const fontFamilySelect = document.getElementById("fontFamilySelect");
+  const fontFamilyInput = document.getElementById("fontFamilyInput");
+  const fontList = document.getElementById("fontList");
   const loadSystemFontsBtn = document.getElementById("loadSystemFontsBtn");
   const fontSizeInput = document.getElementById("fontSize");
 
@@ -38,18 +39,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const basicFonts = ["Arial", "Verdana", "Times New Roman", "Courier New", "Georgia", "Impact", "Tahoma", "Trebuchet MS"];
 
   function populateFontDropdown(fonts) {
-    fontFamilySelect.innerHTML = ""; // Clear existing options
+    fontList.innerHTML = ""; // Clear existing options
     fonts.forEach(font => {
       const option = document.createElement("option");
       option.value = font;
-      option.textContent = font;
-      fontFamilySelect.appendChild(option);
+      fontList.appendChild(option);
     });
     // Set initial value
     if (window.fabricEditor && window.fabricEditor.getActiveObject()) {
-      fontFamilySelect.value = window.fabricEditor.getActiveObject().fontFamily;
+      fontFamilyInput.value = window.fabricEditor.getActiveObject().fontFamily;
     } else {
-      fontFamilySelect.value = "Arial"; // Default
+      fontFamilyInput.value = "Arial"; // Default
     }
   }
 
@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
   populateFontDropdown(basicFonts);
 
   // Event listener for font family change
-  fontFamilySelect.addEventListener("change", (event) => {
+  fontFamilyInput.addEventListener("input", (event) => {
     updateFontFamily(event.target.value);
   });
 
