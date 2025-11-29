@@ -8,7 +8,10 @@ let ditheringOptionsDiv; // New reference
 let ditheringAlgorithmSelect; // New reference
 
 document.addEventListener("DOMContentLoaded", () => {
-  canvas = new fabric.Canvas('fabricCanvas');
+  canvas = new fabric.Canvas('fabricCanvas', {
+    enableRetinaScaling: true,
+    objectCaching: false
+  });
   canvas.setHeight(96); // Printer height
   canvas.setWidth(320); // Max width for a label
 
@@ -74,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
                           const targetHeight = tempImage.height * initialScale;
           
                           // Get ImageData at the target scaled size
-                          const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight);
+                          const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight, false);
           
                           // Default dithering algorithm for now
                           const currentDitheringAlgorithm = 'floyd-steinberg';
@@ -129,7 +132,7 @@ function reDitherImageOnScale(fabricImageObject) {
       tempImage.onload = function() {
         const targetWidth = fabricImageObject.getScaledWidth();
         const targetHeight = fabricImageObject.getScaledHeight();
-        const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight);
+        const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight, false);
         const ditheredImageData = ditheringAlgorithms[ditheringAlgorithm](toGrayscale(originalImageData));    const ditheredDataURL = imageDataToDataURL(ditheredImageData);
 
     // Get current scale and position to re-apply after source change

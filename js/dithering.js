@@ -225,16 +225,26 @@ function binaryThresholdDithering(imageData) {
 }
 
 // Function to convert an Image object to ImageData, optionally scaling it
-function getImageDataFromImage(image, targetWidth, targetHeight) {
+function getImageDataFromImage(image, targetWidth, targetHeight, smoothing = true) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
-    // Use target dimensions if provided, otherwise use original image dimensions
-    canvas.width = targetWidth || image.width;
-    canvas.height = targetHeight || image.height;
+    // Ensure target dimensions are integers for pixel-perfect drawing
+    const finalWidth = Math.round(targetWidth || image.width);
+    const finalHeight = Math.round(targetHeight || image.height);
 
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height); // Draw and scale
-    return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    canvas.width = finalWidth;
+    canvas.height = finalHeight;
+
+    // Disable image smoothing for pixel-perfect scaling if requested
+    ctx.imageSmoothingEnabled = smoothing;
+    // For older browsers/different contexts, consider vendor prefixes
+    // ctx.mozImageSmoothingEnabled = smoothing;
+    // ctx.webkitImageSmoothingEnabled = smoothing;
+    // ctx.msImageSmoothingEnabled = smoothing;
+
+    ctx.drawImage(image, 0, 0, finalWidth, finalHeight); // Draw and scale
+    return ctx.getImageData(0, 0, finalWidth, finalHeight);
 }
 
 // Function to convert ImageData back to a Data URL
