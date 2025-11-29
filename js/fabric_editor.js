@@ -54,23 +54,30 @@ document.addEventListener("DOMContentLoaded", () => {
             const canvasWidth = canvas.getWidth();
             const canvasHeight = canvas.getHeight();
 
-            // Calculate scale factor to fit image within canvas while maintaining aspect ratio
-            const scaleX = canvasWidth / img.width;
-            const scaleY = canvasHeight / img.height;
-            const scale = Math.min(scaleX, scaleY);
+            // Set a maximum width for the image to fit within the canvas
+            const maxWidth = canvasWidth;
+            const maxHeight = canvasHeight;
+
+            // Calculate scaling factors
+            const scaleX = maxWidth / img.width;
+            const scaleY = maxHeight / img.height;
+            const scale = Math.min(scaleX, scaleY, 1); // Only scale down if image is larger than canvas
 
             img.set({
               scaleX: scale,
               scaleY: scale,
-              left: (canvasWidth - img.width * scale) / 2, // Center horizontally
-              top: (canvasHeight - img.height * scale) / 2, // Center vertically
-              selectable: true,
-              evented: true,
+              left: (canvasWidth - img.width * scale) / 2,
+              top: (canvasHeight - img.height * scale) / 2,
+              // Set a custom property to identify image objects
+              isUploadedImage: true
             });
             canvas.add(img);
             canvas.setActiveObject(img);
             canvas.renderAll();
-          }, { crossOrigin: 'anonymous' }); // Added crossOrigin for potential external image loading (though not strictly necessary for local file uploads)
+          }, {
+            crossOrigin: 'anonymous' // Important for loading external images
+          });
+          e.target.value = ''; // Clear the input so the same file can be uploaded again
         };
         reader.readAsDataURL(file);
       }
