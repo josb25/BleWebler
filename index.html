@@ -13,7 +13,6 @@
     <!-- <label for="labelType">Type of Content:</label> -->
     <div class="label-type-selector">
       <button class="label-type-btn active" data-type="text">Text</button>
-      <button class="label-type-btn" data-type="bitmap">Image</button>
       <button class="label-type-btn" data-type="qrcode">QR-Code</button>
       <button class="label-type-btn" data-type="info">Info</button>
     </div>
@@ -56,10 +55,11 @@
         <label><input type="checkbox" id="underline" />Underline</label>
         <label><input type="checkbox" id="segmentedPaper" />Segmented Paper</label>
       </div>
-    </div>
 
-    <div id="imageOptions" style="display:none;">
-      <label>Work in Progress.</label>
+      <div style="margin-top: 10px;">
+        <label for="imageUploadInput">Upload Image:</label>
+        <input type="file" id="imageUploadInput" accept="image/*" />
+      </div>
     </div>
 
     <div id="qrcodeOptions" style="display:none;">

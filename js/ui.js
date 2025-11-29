@@ -104,23 +104,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Alle Options-Divs ausblenden
       const textDiv = document.getElementById("textOptions");
-      const imageDiv = document.getElementById("imageOptions");
       const qrDiv = document.getElementById("qrcodeOptions");
       const infoDiv = document.getElementById("infoOptions");
 
-      if (!textDiv || !imageDiv || !qrDiv || !infoDiv) {
+      if (!textDiv || !qrDiv || !infoDiv) {
         console.error("Options-Divs nicht gefunden!");
         return;
       }
 
       textDiv.style.display = "none";
-      imageDiv.style.display = "none";
       qrDiv.style.display = "none";
       infoDiv.style.display = "none";
 
       // Gewählte Option einblenden
       if (type === "text") textDiv.style.display = "block";
-      else if (type === "bitmap") imageDiv.style.display = "block";
       else if (type === "qrcode") qrDiv.style.display = "block";
       else if (type === "info") qrDiv.style.display = "block";
     });

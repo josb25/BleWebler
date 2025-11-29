@@ -40,6 +40,42 @@ document.addEventListener("DOMContentLoaded", () => {
   boldCheckbox.addEventListener('change', applyTextProperties);
   italicCheckbox.addEventListener('change', applyTextProperties);
   underlineCheckbox.addEventListener('change', applyTextProperties);
+
+  // Event listener for image upload
+  const imageUploadInput = document.getElementById('imageUploadInput');
+  if (imageUploadInput) {
+    imageUploadInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const imgDataUrl = event.target.result;
+          fabric.Image.fromURL(imgDataUrl, function(img) {
+            const canvasWidth = canvas.getWidth();
+            const canvasHeight = canvas.getHeight();
+
+            // Calculate scale factor to fit image within canvas while maintaining aspect ratio
+            const scaleX = canvasWidth / img.width;
+            const scaleY = canvasHeight / img.height;
+            const scale = Math.min(scaleX, scaleY);
+
+            img.set({
+              scaleX: scale,
+              scaleY: scale,
+              left: (canvasWidth - img.width * scale) / 2, // Center horizontally
+              top: (canvasHeight - img.height * scale) / 2, // Center vertically
+              selectable: true,
+              evented: true,
+            });
+            canvas.add(img);
+            canvas.setActiveObject(img);
+            canvas.renderAll();
+          }, { crossOrigin: 'anonymous' }); // Added crossOrigin for potential external image loading (though not strictly necessary for local file uploads)
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
 });
 
 function addTextToCanvas() {
@@ -92,22 +128,52 @@ function applyTextProperties() {
 
 function updateTextControls() {
   const activeObject = canvas.getActiveObject();
+  const newTextContentInput = document.getElementById('newTextContent');
+  const addTextButton = document.querySelector('button[onclick="addTextToCanvas()"]');
+  const deleteSelectedButton = document.querySelector('button[onclick="deleteSelectedObject()"]');
+
+  const textStyleControls = [
+    fontSizeInput,
+    fontFamilyInput,
+    boldCheckbox,
+    italicCheckbox,
+    underlineCheckbox,
+  ];
+
   if (activeObject && activeObject.type === 'i-text') {
+    textStyleControls.forEach(control => control.disabled = false);
+    newTextContentInput.disabled = false;
+    addTextButton.disabled = false;
+    deleteSelectedButton.disabled = false;
+
     const effectiveFontSize = Math.round(activeObject.fontSize * activeObject.scaleY);
     fontSizeInput.value = effectiveFontSize;
-    fontFamilyInput.value = activeObject.fontFamily; // Update fontFamilySelect
+    fontFamilyInput.value = activeObject.fontFamily;
     boldCheckbox.checked = activeObject.fontWeight === 'bold';
     italicCheckbox.checked = activeObject.fontStyle === 'italic';
     underlineCheckbox.checked = activeObject.underline;
+    newTextContentInput.value = activeObject.text; // Update text content input
+  } else if (activeObject && activeObject.type === 'image') {
+    textStyleControls.forEach(control => control.disabled = true);
+    newTextContentInput.disabled = true;
+    addTextButton.disabled = false; // Still allow adding new text
+    deleteSelectedButton.disabled = false; // Still allow deleting images
+    clearTextControls(); // Clear text control values
   } else {
-    clearTextControls();
+    // No object selected
+    textStyleControls.forEach(control => control.disabled = false);
+    newTextContentInput.disabled = false;
+    addTextButton.disabled = false;
+    deleteSelectedButton.disabled = true; // No object to delete
+    newTextContentInput.value = ''; // Clear new text content input
+    clearTextControls(); // Reset text control values to default
   }
 }
 
 function clearTextControls() {
   // Reset to default or clear when no text object is selected
   fontSizeInput.value = '48';
-  fontFamilyInput.value = 'Arial'; // Reset fontFamilySelect
+  fontFamilyInput.value = 'Arial';
   boldCheckbox.checked = false;
   italicCheckbox.checked = false;
   underlineCheckbox.checked = false;
@@ -121,52 +187,71 @@ window.getFabricCanvas = function() {
 window.fabricEditor = {
   setTextAlign: function(alignment) {
     const activeObject = canvas.getActiveObject();
-    if (activeObject && activeObject.type === 'i-text') {
-      const canvasWidth = canvas.getWidth();
-      const objectWidth = activeObject.getScaledWidth();
-      let newLeft = activeObject.left;
+    if (!activeObject) return;
 
+    const canvasWidth = canvas.getWidth();
+    let objectWidth;
+    let newLeft;
+
+    if (activeObject.type === 'i-text') {
+      objectWidth = activeObject.getScaledWidth();
       // Set text alignment within the object's bounding box (for multi-line text)
       activeObject.set({ textAlign: alignment });
-
-      // Adjust the object's left position to align it within the canvas
-      switch (alignment) {
-        case 'left':
-          newLeft = 0; // Align to left edge of canvas
-          break;
-        case 'center':
-          newLeft = (canvasWidth - objectWidth) / 2; // Center horizontally
-          break;
-        case 'right':
-          newLeft = canvasWidth - objectWidth; // Align to right edge of canvas
-          break;
-      }
-      activeObject.set({ left: newLeft });
-      canvas.renderAll();
+    } else if (activeObject.type === 'image') {
+      objectWidth = activeObject.getScaledWidth();
+    } else {
+      return; // Not a text or image object, do nothing
     }
+
+    // Adjust the object's left position to align it within the canvas
+    switch (alignment) {
+      case 'left':
+        newLeft = 0; // Align to left edge of canvas
+        break;
+      case 'center':
+        newLeft = (canvasWidth - objectWidth) / 2; // Center horizontally
+        break;
+      case 'right':
+        newLeft = canvasWidth - objectWidth; // Align to right edge of canvas
+        break;
+      default:
+        return;
+    }
+    activeObject.set({ left: newLeft });
+    canvas.renderAll();
   },
 
   setVerticalAlign: function(alignment) {
     const activeObject = canvas.getActiveObject();
-    if (activeObject && activeObject.type === 'i-text') {
-      const canvasHeight = canvas.getHeight();
-      const objectHeight = activeObject.getScaledHeight();
-      let newTop = activeObject.top; // Default to current top
+    if (!activeObject) return;
 
-      switch (alignment) {
-        case 'top':
-          newTop = 0; // Align to top of canvas
-          break;
-        case 'middle':
-          newTop = (canvasHeight - objectHeight) / 2; // Center vertically
-          break;
-        case 'bottom':
-          newTop = canvasHeight - objectHeight; // Align to bottom of canvas
-          break;
-      }
-      activeObject.set({ top: newTop });
-      canvas.renderAll();
+    const canvasHeight = canvas.getHeight();
+    let objectHeight;
+    let newTop;
+
+    if (activeObject.type === 'i-text') {
+      objectHeight = activeObject.getScaledHeight();
+    } else if (activeObject.type === 'image') {
+      objectHeight = activeObject.getScaledHeight();
+    } else {
+      return; // Not a text or image object, do nothing
     }
+
+    switch (alignment) {
+      case 'top':
+        newTop = 0; // Align to top of canvas
+        break;
+      case 'middle':
+        newTop = (canvasHeight - objectHeight) / 2; // Center vertically
+        break;
+      case 'bottom':
+        newTop = canvasHeight - objectHeight; // Align to bottom of canvas
+        break;
+      default:
+        return;
+    }
+    activeObject.set({ top: newTop });
+    canvas.renderAll();
   },
 
   setFontFamily: function(fontFamily) {
@@ -191,9 +276,5 @@ window.fabricEditor = {
     return canvas.getActiveObject();
   },
 
-  // This method will be called when an object on the canvas is selected to update the UI controls.
-  // It's exposed so ui.js can trigger it if needed, though canvas.on('selection:...') already handles it.
-  updateUiControls: function() {
-    updateTextControls();
-  }
+
 };
