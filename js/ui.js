@@ -53,3 +53,15 @@ document.addEventListener("DOMContentLoaded", () => {
     printButton.addEventListener("click", printLabel);
   }
 });
+
+function setTextAlign(alignment) {
+  if (window.fabricEditor) {
+    window.fabricEditor.setTextAlign(alignment);
+  }
+}
+
+function setVerticalAlign(alignment) {
+  if (window.fabricEditor) {
+    window.fabricEditor.setVerticalAlign(alignment);
+  }
+}

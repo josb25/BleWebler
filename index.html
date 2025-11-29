@@ -34,6 +34,20 @@
         <input type="text" id="fontFamily" value="Arial" />
       </div>
 
+      <div style="margin-top: 10px;">
+        <label>Text Alignment:</label>
+        <button onclick="setTextAlign('left')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M80-80v-800h80v800H80Zm160-200v-120h400v120H240Zm0-280v-120h640v120H240Z"/></svg></button>
+        <button onclick="setTextAlign('center')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M440-80v-200H240v-120h200v-160H120v-120h320v-200h80v200h320v120H520v160h200v120H520v200h-80Z"/></svg></button>
+        <button onclick="setTextAlign('right')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M800-80v-800h80v800h-80ZM320-280v-120h400v120H320ZM80-560v-120h640v120H80Z"/></svg></button>
+      </div>
+
+      <div style="margin-top: 10px;">
+        <label>Vertical Alignment:</label>
+        <button onclick="setVerticalAlign('top')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M280-80v-640h120v640H280Zm280-240v-400h120v400H560ZM80-800v-80h800v80H80Z"/></svg></button>
+        <button onclick="setVerticalAlign('middle')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M280-120v-320H80v-80h200v-320h120v320h160v-200h120v200h200v80H680v200H560v-200H400v320H280Z"/></svg></button>
+        <button onclick="setVerticalAlign('bottom')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M80-80v-80h800v80H80Zm200-160v-640h120v640H280Zm280 0v-400h120v400H560Z"/></svg></button>
+      </div>
+
       <div class="options">
         <label><input type="checkbox" id="bold" />Bold</label>
         <label><input type="checkbox" id="italic" />Italic</label>

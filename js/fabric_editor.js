@@ -117,3 +117,55 @@ function clearTextControls() {
 window.getFabricCanvas = function() {
   return canvas;
 }
+
+window.fabricEditor = {
+  setTextAlign: function(alignment) {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject && activeObject.type === 'i-text') {
+      const canvasWidth = canvas.getWidth();
+      const objectWidth = activeObject.getScaledWidth();
+      let newLeft = activeObject.left;
+
+      // Set text alignment within the object's bounding box (for multi-line text)
+      activeObject.set({ textAlign: alignment });
+
+      // Adjust the object's left position to align it within the canvas
+      switch (alignment) {
+        case 'left':
+          newLeft = 0; // Align to left edge of canvas
+          break;
+        case 'center':
+          newLeft = (canvasWidth - objectWidth) / 2; // Center horizontally
+          break;
+        case 'right':
+          newLeft = canvasWidth - objectWidth; // Align to right edge of canvas
+          break;
+      }
+      activeObject.set({ left: newLeft });
+      canvas.renderAll();
+    }
+  },
+
+  setVerticalAlign: function(alignment) {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject && activeObject.type === 'i-text') {
+      const canvasHeight = canvas.getHeight();
+      const objectHeight = activeObject.getScaledHeight();
+      let newTop = activeObject.top; // Default to current top
+
+      switch (alignment) {
+        case 'top':
+          newTop = 0; // Align to top of canvas
+          break;
+        case 'middle':
+          newTop = (canvasHeight - objectHeight) / 2; // Center vertically
+          break;
+        case 'bottom':
+          newTop = canvasHeight - objectHeight; // Align to bottom of canvas
+          break;
+      }
+      activeObject.set({ top: newTop });
+      canvas.renderAll();
+    }
+  }
+};
