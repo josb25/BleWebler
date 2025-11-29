@@ -1,30 +1,45 @@
 let canvas;
+let fontSizeInput;
+let fontFamilyInput;
+let boldCheckbox;
+let italicCheckbox;
+let underlineCheckbox;
 
 document.addEventListener("DOMContentLoaded", () => {
   canvas = new fabric.Canvas('fabricCanvas');
   canvas.setHeight(96); // Printer height
   canvas.setWidth(384); // Max width for a label
 
+  // Get references to control elements
+  fontSizeInput = document.getElementById('fontSize');
+  fontFamilyInput = document.getElementById('fontFamily');
+  boldCheckbox = document.getElementById('bold');
+  italicCheckbox = document.getElementById('italic');
+  underlineCheckbox = document.getElementById('underline');
+
   // Add initial text
-  const initialText = new fabric.IText('Hello World', {
+  const initialText = new fabric.IText(document.getElementById('newTextContent').value || 'Hello World', {
     left: 50,
     top: 20,
-    fontFamily: 'Arial',
-    fontSize: 48,
+    fontFamily: fontFamilyInput.value || 'Arial',
+    fontSize: parseFloat(fontSizeInput.value) || 48,
     fill: '#000000',
   });
   canvas.add(initialText);
   canvas.setActiveObject(initialText);
 
   // Event listener for object selection to update UI controls
-  canvas.on('selection:updated', updateStylingCheckboxes);
-  canvas.on('selection:created', updateStylingCheckboxes);
-  canvas.on('selection:cleared', clearStylingCheckboxes);
+  canvas.on('selection:updated', updateTextControls);
+  canvas.on('selection:created', updateTextControls);
+  canvas.on('selection:cleared', clearTextControls);
+  canvas.on('object:modified', updateTextControls); // Update controls when object is modified (e.g., scaled)
 
-  // Event listeners for styling checkboxes
-  document.getElementById('bold').addEventListener('change', applyStyle);
-  document.getElementById('italic').addEventListener('change', applyStyle);
-  document.getElementById('underline').addEventListener('change', applyStyle);
+  // Event listeners for styling controls
+  fontSizeInput.addEventListener('change', applyTextProperties);
+  fontFamilyInput.addEventListener('change', applyTextProperties);
+  boldCheckbox.addEventListener('change', applyTextProperties);
+  italicCheckbox.addEventListener('change', applyTextProperties);
+  underlineCheckbox.addEventListener('change', applyTextProperties);
 });
 
 function addTextToCanvas() {
@@ -34,13 +49,16 @@ function addTextToCanvas() {
   const newText = new fabric.IText(textContent, {
     left: 50,
     top: 50,
-    fontFamily: 'Arial',
-    fontSize: 48, // Default font size
+    fontFamily: fontFamilyInput.value || 'Arial',
+    fontSize: parseFloat(fontSizeInput.value) || 48,
     fill: '#000000',
+    fontWeight: boldCheckbox.checked ? 'bold' : 'normal',
+    fontStyle: italicCheckbox.checked ? 'italic' : 'normal',
+    underline: underlineCheckbox.checked,
   });
   canvas.add(newText);
   canvas.setActiveObject(newText);
-  updateStylingCheckboxes();
+  updateTextControls();
   canvas.renderAll();
 }
 
@@ -49,41 +67,50 @@ function deleteSelectedObject() {
   if (activeObject) {
     canvas.remove(activeObject);
     canvas.renderAll();
-    clearStylingCheckboxes();
+    clearTextControls();
   }
 }
 
-function applyStyle() {
+function applyTextProperties() {
   const activeObject = canvas.getActiveObject();
   if (activeObject && activeObject.type === 'i-text') {
-    const isBold = document.getElementById('bold').checked;
-    const isItalic = document.getElementById('italic').checked;
-    const isUnderline = document.getElementById('underline').checked;
-
+    const newFontSize = parseFloat(fontSizeInput.value);
     activeObject.set({
-      fontWeight: isBold ? 'bold' : 'normal',
-      fontStyle: isItalic ? 'italic' : 'normal',
-      underline: isUnderline,
+      fontSize: newFontSize,
+      fontFamily: fontFamilyInput.value || activeObject.fontFamily,
+      fontWeight: boldCheckbox.checked ? 'bold' : 'normal',
+      fontStyle: italicCheckbox.checked ? 'italic' : 'normal',
+      underline: underlineCheckbox.checked,
+      scaleX: 1, // Reset scale when font size is manually set
+      scaleY: 1, // Reset scale when font size is manually set
     });
     canvas.renderAll();
+    // After applying new font size, update controls to reflect the change
+    updateTextControls();
   }
 }
 
-function updateStylingCheckboxes() {
+function updateTextControls() {
   const activeObject = canvas.getActiveObject();
   if (activeObject && activeObject.type === 'i-text') {
-    document.getElementById('bold').checked = activeObject.fontWeight === 'bold';
-    document.getElementById('italic').checked = activeObject.fontStyle === 'italic';
-    document.getElementById('underline').checked = activeObject.underline;
+    const effectiveFontSize = Math.round(activeObject.fontSize * activeObject.scaleY);
+    fontSizeInput.value = effectiveFontSize;
+    fontFamilyInput.value = activeObject.fontFamily;
+    boldCheckbox.checked = activeObject.fontWeight === 'bold';
+    italicCheckbox.checked = activeObject.fontStyle === 'italic';
+    underlineCheckbox.checked = activeObject.underline;
   } else {
-    clearStylingCheckboxes();
+    clearTextControls();
   }
 }
 
-function clearStylingCheckboxes() {
-  document.getElementById('bold').checked = false;
-  document.getElementById('italic').checked = false;
-  document.getElementById('underline').checked = false;
+function clearTextControls() {
+  // Reset to default or clear when no text object is selected
+  fontSizeInput.value = '48';
+  fontFamilyInput.value = 'Arial';
+  boldCheckbox.checked = false;
+  italicCheckbox.checked = false;
+  underlineCheckbox.checked = false;
 }
 
 // Expose canvas for utils.js to access it
