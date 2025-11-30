@@ -10,6 +10,9 @@
   <div class="container">
     <h1>BleWebler</h1>
 
+    <label for="printerSelect">Printer:</label>
+    <select id="printerSelect"></select>
+
     <!-- <label for="labelType">Type of Content:</label> -->
     <div class="label-type-selector">
       <button class="label-type-btn active" data-type="text">Text</button>
@@ -20,8 +23,11 @@
 
 
     <div id="textOptions">
-    <label for="labelText">Text:</label>
+    <label for="labelText">Text (line 1):</label>
     <input type="text" id="labelText" placeholder="Input text" value="" />
+
+    <label for="labelText2">Text (line 2, optional):</label>
+    <input type="text" id="labelText2" placeholder="Optional second line" value="" />
 
     <label for="fontSize">Font size (px):</label>
     <input type="number" id="fontSize" value="48" min="1" />
@@ -34,11 +40,25 @@
         <label><input type="checkbox" id="italic" />Italic</label>
         <label><input type="checkbox" id="underline" />Underline</label>
         <label><input type="checkbox" id="segmentedPaper" />Segmented Paper</label>
+        <label><input type="checkbox" id="shrinkToWidth" />Shrink to label width</label>
       </div>
+
+      <canvas id="textPreview" width="200" height="80" style="display:block; margin-top:0.5em; background:#fff;"></canvas>
     </div>
 
     <div id="imageOptions" style="display:none;">
-      <label>Work in Progress.</label>
+      <label for="imageFile">Bitmap (BMP):</label>
+      <input type="file" id="imageFile" accept=".bmp,image/bmp" />
+
+      <canvas id="imagePreview" width="200" height="80" style="display:block; margin-top:0.5em; background:#fff;"></canvas>
+
+      <label for="imageScaleMode">Image scaling on label:</label>
+      <select id="imageScaleMode">
+        <option value="scale">Scale/Stretch to label width</option>
+        <option value="asis">Print as is (crop if too high)</option>
+      </select>
+
+      <div id="imageInfo" style="margin-top:0.5em; text-align:left;"></div>
     </div>
 
     <div id="qrcodeOptions" style="display:none;">
@@ -51,6 +71,10 @@
       <!-- Info about printer -->
     </div>
 
+    <div id="estimatedLengthContainer" style="margin-top:1em; text-align:left;">
+      <label>Estimated length: <span id="estimatedLengthValue">-</span></label>
+    </div>
+
     <button onclick="printLabel()">Print!</button>
 
     <button class="advanced-toggle" onclick="toggleAdvanced()">Show Advanced</button>
@@ -61,6 +85,7 @@
   </div>
 
   <script src="js/marklife_p12.js" defer></script>
+  <script src="js/printers.js" defer></script>
   <script src="js/ui.js" defer></script>
   <script src="js/utils.js" defer></script>
 </body>

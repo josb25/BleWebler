@@ -5,7 +5,7 @@ Try it: https://josb25.github.io/BleWebler/
 
 Features
   - Bluetooth LE connection via Web Bluetooth API
-  - Direct printing to compatible label printers
+  - Direct printing text and bitmap images to compatible label printers
   - Runs entirely in the browser: No installation required
   - Modular structure: Ready to support more printer models
   - Open source and privacy-friendly: Nothing is sent to any server
@@ -21,8 +21,6 @@ Requirements
 
 Future Plans
   - Support for more printer models and brands
-  - Label preview
-  - Ability to import bitmaps
   - Print QR- and Barcodes
 
 
