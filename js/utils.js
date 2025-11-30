@@ -4,7 +4,7 @@ const supportedPrinters = [
     name: "Marklife_P12",
     namePrefix: "P12_", //prefix to search for in the name while connecting via BLE
     pattern: /^P12_.+?_BLE$/, //Pattern used to distinguish this printer from others after connecting via BLE
-    handler: printLabelOnP12, // function called to print a label -> Parameters: bluetooth device and bitmap
+    printerClass: MarklifeP12Printer, // Class to instantiate
     optionalServices: ["0000ff00-0000-1000-8000-00805f9b34fb"], // UUIDs needed
     px: 96, //printed width in px
     dpm: 8 //printer dots per mm (203 dpi)
@@ -14,7 +14,7 @@ const supportedPrinters = [
     name: "Marklife_P15",
     namePrefix: "P15_", //prefix to search for in the name while connecting via BLE
     pattern: /^P15_.+?_BLE$/, //Pattern used to distinguish this printer from others after connecting via BLE
-    handler: printLabelOnP12, // function called to print a label -> Parameters: bluetooth device and bitmap; uses the same function as P12 as it seems to work
+    printerClass: MarklifeP12Printer, // Class to instantiate
     optionalServices: ["0000ff00-0000-1000-8000-00805f9b34fb"], // UUIDs needed
     px: 96, //printed width in px
     dpm: 8 //printer dots per mm (203 dpi)
@@ -54,7 +54,8 @@ async function printLabel() {
       log(`Detected printer: ${device.name} -> matched ${printer.name}`);
       const infinitePaperCheckbox = document.getElementById("infinitePaperCheckbox");
       const isSegmented = infinitePaperCheckbox ? !infinitePaperCheckbox.checked : true; // Default to segmented if checkbox missing
-      await printer.handler(device, constructBitmap(printer.px), isSegmented);
+      const printerInstance = new printer.printerClass();
+      await printerInstance.print(device, constructBitmap(printer.px), isSegmented);
     } else {
       log(`Unsupported printer model: ${device.name}`);
     }
