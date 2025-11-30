@@ -52,7 +52,9 @@ async function printLabel() {
 
     if (printer) {
       log(`Detected printer: ${device.name} -> matched ${printer.name}`);
-      await printer.handler(device, constructBitmap(printer.px), document.getElementById("segmentedPaper").checked);
+      const infinitePaperCheckbox = document.getElementById("infinitePaperCheckbox");
+      const isSegmented = infinitePaperCheckbox ? !infinitePaperCheckbox.checked : true; // Default to segmented if checkbox missing
+      await printer.handler(device, constructBitmap(printer.px), isSegmented);
     } else {
       log(`Unsupported printer model: ${device.name}`);
     }
