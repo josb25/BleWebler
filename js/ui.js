@@ -243,10 +243,72 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // 2. Show Modal (Always show on load for now as requested)
-    startupModal.classList.add("show");
+    // Function to apply settings
+    const applyPrinterSettings = (printerIndex, widthMm, heightMm, isInfinite) => {
+      if (typeof supportedPrinters !== 'undefined' && supportedPrinters[printerIndex]) {
+        const printer = supportedPrinters[printerIndex];
+        const dpm = printer.dpm;
 
-    // Settings Button Logic
+        // Calculate pixels
+        let widthPx;
+        if (isInfinite) {
+          widthPx = Math.round((widthMm || 100) * dpm);
+          if (resizeHandle) resizeHandle.classList.remove('hidden');
+        } else {
+          widthPx = Math.round(widthMm * dpm);
+          if (resizeHandle) resizeHandle.classList.add('hidden');
+        }
+
+        // Cap height at printer's max printable height
+        let heightPx = Math.round(heightMm * dpm);
+        if (heightPx > printer.px) {
+          heightPx = printer.px;
+        }
+
+        // Update Canvas
+        if (window.fabricEditor && window.fabricEditor.updateCanvasSize) {
+          window.fabricEditor.updateCanvasSize(widthPx, heightPx);
+        }
+
+        // Hide Modal
+        startupModal.classList.remove("show");
+      }
+    };
+
+    // Check for URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlPrinter = urlParams.get('printer');
+    const urlWidth = urlParams.get('width');
+    const urlHeight = urlParams.get('height');
+    const urlInfinite = urlParams.get('infinite') === 'true';
+
+    if (urlPrinter !== null && urlWidth !== null && urlHeight !== null) {
+      // Apply settings from URL
+      const pIndex = parseInt(urlPrinter);
+      const w = parseFloat(urlWidth);
+      const h = parseFloat(urlHeight);
+
+      if (!isNaN(pIndex) && !isNaN(w) && !isNaN(h)) {
+        // Update inputs to match URL (so if they open settings later, it's correct)
+        printerSelect.value = pIndex;
+        paperWidthInput.value = w;
+        paperHeightInput.value = h;
+        if (infinitePaperCheckbox) {
+          infinitePaperCheckbox.checked = urlInfinite;
+          // Trigger change event to update UI state (hide/show width input)
+          infinitePaperCheckbox.dispatchEvent(new Event('change'));
+        }
+
+        applyPrinterSettings(pIndex, w, h, urlInfinite);
+      } else {
+        // Invalid params, show modal
+        startupModal.classList.add("show");
+      }
+    } else {
+      // No URL params, show modal
+      startupModal.classList.add("show");
+    }
+
     if (settingsBtn) {
       settingsBtn.addEventListener("click", () => {
         startupModal.classList.add("show");
@@ -276,56 +338,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedPrinterIndex = printerSelect.value;
       const widthMm = parseFloat(paperWidthInput.value);
       const heightMm = parseFloat(paperHeightInput.value);
+      const isInfinite = infinitePaperCheckbox ? infinitePaperCheckbox.checked : false;
 
-      if (typeof supportedPrinters !== 'undefined' && supportedPrinters[selectedPrinterIndex]) {
-        const printer = supportedPrinters[selectedPrinterIndex];
-        const dpm = printer.dpm;
+      applyPrinterSettings(selectedPrinterIndex, widthMm, heightMm, isInfinite);
 
-        // Calculate pixels
-        // Calculate pixels
-        let widthPx;
-        if (infinitePaperCheckbox && infinitePaperCheckbox.checked) {
-          // If infinite paper, we might want a default large width or dynamic.
-          // For now, let's use a large default if the input is hidden/ignored,
-          // OR if the user is supposed to resize manually later, we start small.
-          // But the requirement says "option for Paper Width needs to be not visible".
-          // So we should probably pick a reasonable default or keep the last value.
-          // Let's assume a "continuous" mode might just need a wide enough canvas.
-          // However, the user might want to resize it manually.
-          // Let's set a default large width for "Infinite" to start with, e.g., 300mm?
-          // Or better, keep the current value but unlock it.
-          // Since the input is hidden, we can't rely on user input there.
-          // Let's use a default of 100mm for start, and user can resize if needed (though resize UI is also hidden?)
-          // Wait, if width input is hidden, how does user resize?
-          // "The user then needs to be able to resize the paper him self."
-          // Maybe the resize control should be available in the main UI?
-          // Or maybe "Infinite Paper" just means "Continuous" and the width is determined by content?
-          // For now, let's use the value from the input (even if hidden) or a default.
-          widthPx = Math.round((parseFloat(paperWidthInput.value) || 100) * dpm);
-          if (resizeHandle) resizeHandle.classList.remove('hidden');
-        } else {
-          widthPx = Math.round(widthMm * dpm);
-          if (resizeHandle) resizeHandle.classList.add('hidden');
-        }
-
-        // Cap height at printer's max printable height (printer.px)
-        // printer.px is the width of the print head in pixels (e.g. 96px for 12mm)
-        // So heightPx should not exceed printer.px
-        let heightPx = Math.round(heightMm * dpm);
-        if (heightPx > printer.px) {
-          heightPx = printer.px;
-          // Optional: Alert user or just silently cap?
-          // console.log(`Capping height to ${printer.px}px`);
-        }
-
-        // Update Canvas
-        if (window.fabricEditor && window.fabricEditor.updateCanvasSize) {
-          window.fabricEditor.updateCanvasSize(widthPx, heightPx);
-        }
-
-        // Hide Modal
-        startupModal.classList.remove("show");
-      }
+      // Update URL
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.set('printer', selectedPrinterIndex);
+      newUrl.searchParams.set('width', widthMm);
+      newUrl.searchParams.set('height', heightMm);
+      newUrl.searchParams.set('infinite', isInfinite);
+      window.history.replaceState({}, '', newUrl);
     });
   }
 });
