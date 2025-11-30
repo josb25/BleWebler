@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => {
       const type = btn.dataset.type;
 
-      // Active-Klasse setzen
+      // set active class
       buttons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
 
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const infoDiv = document.getElementById("infoOptions");
 
       if (!textDiv || !imageDiv || !qrDiv || !infoDiv) {
-        console.error("Options-Divs nicht gefunden!");
+        console.error("Options containers not found!");
         return;
       }
 

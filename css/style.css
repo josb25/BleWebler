@@ -277,12 +277,14 @@ label {
 #labelPreview {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  border: 1px solid #bbb;
+  border: 1px solid #0f0;
   background: #fff;
 }
 
-
-
+#textPreview,
+#imagePreview {
+  border: 1px solid #0f0;
+}
 
 .label-type-selector {
   display: flex;

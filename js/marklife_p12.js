@@ -1,6 +1,4 @@
-const canvasHeight = 96;
-
-async function printLabelOnP12(device, bitmap, segmentedPaper = false) {
+async function printLabelOnP12(device, bitmap, segmentedPaper = false, canvasHeight = 96) {
     const canvasWidth = bitmap[0].length
 
     const payload = bitmapToPacket(bitmap, canvasWidth);
@@ -15,6 +13,9 @@ async function printLabelOnP12(device, bitmap, segmentedPaper = false) {
 
         log(device.name + " (" + device.id + ") connected: " + device.gatt.connected);
 
+        const dotsPerByte = 8;
+        const canvasHeightBytes = Math.floor(canvasHeight / dotsPerByte);
+
         var packets = [
         Uint8Array.from([0x10, 0xff, 0x40]), // initialization packet
         Uint8Array.from([
@@ -22,7 +23,7 @@ async function printLabelOnP12(device, bitmap, segmentedPaper = false) {
             0x10, 0xff, 0xf1, 0x02, 0x1d,
             0x76,
             0x30, 0x00,
-            0x0c, 0x00,
+            canvasHeightBytes & 0xff, (canvasHeightBytes >> 8) & 0xff,
             canvasWidth & 0xff, (canvasWidth >> 8) & 0xff
         ]),
         payload,
@@ -44,7 +45,7 @@ async function printLabelOnP12(device, bitmap, segmentedPaper = false) {
         }
 
         for (const p of packets) {
-        const chunks = splitIntoChunks(p, 96);
+        const chunks = splitIntoChunks(p, 96); // 96 = BLE chunk size in bytes; if this matches printer width, consider tying it to printer settings
         for (const chunk of chunks) {
             await characteristic.writeValue(chunk);
             await new Promise(r => setTimeout(r, 30));
