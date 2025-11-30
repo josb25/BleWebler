@@ -379,7 +379,7 @@ select:focus {
 #logOutput {
   font-family: monospace;
   font-size: 0.75rem;
-  background: var(--text-main);
+  background: #090e18;
   color: #22c55e;
   /* Terminal green */
   padding: var(--spacing-md);

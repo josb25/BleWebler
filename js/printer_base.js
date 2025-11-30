@@ -7,11 +7,26 @@ class PrinterBase {
 
     async connect(device) {
         this.device = device;
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService(this.serviceUUID);
-        const characteristic = await service.getCharacteristic(this.charUUID);
-        log(device.name + " (" + device.id + ") connected: " + device.gatt.connected);
-        return characteristic;
+        if (this.device.gatt.connected) {
+            log(device.name + " already connected.");
+        } else {
+            await device.gatt.connect();
+            log(device.name + " (" + device.id + ") connected: " + device.gatt.connected);
+        }
+
+        try {
+            const server = await device.gatt.connect(); // Ensure we have the server
+            const service = await server.getPrimaryService(this.serviceUUID);
+            const characteristic = await service.getCharacteristic(this.charUUID);
+            return characteristic;
+        } catch (e) {
+
+
+            const server = device.gatt.connected ? device.gatt : await device.gatt.connect();
+            const service = await server.getPrimaryService(this.serviceUUID);
+            const characteristic = await service.getCharacteristic(this.charUUID);
+            return characteristic;
+        }
     }
 
     async sendPackets(characteristic, packets) {
@@ -32,5 +47,10 @@ class PrinterBase {
         } else {
             log("No printer connected.");
         }
+    }
+
+    async getPrinterInfo() {
+        console.log("Printer info not implemented.");
+        return ("Printer info not implemented.");
     }
 }

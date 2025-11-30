@@ -68,4 +68,88 @@ class MarklifeP12Printer extends PrinterBase {
 
     return new Uint8Array(bytes);
   }
+
+  async getPrinterInfo() {
+    if (!this.device || !this.device.gatt.connected) {
+      return "Printer not connected";
+    }
+
+    const INFO_SERVICE = "49535343-fe7d-4ae5-8fa9-9fafd205e455";
+    const WRITE_CHAR = "49535343-8841-43f4-a8d4-ecbe34729bb3";
+    const NOTIFY_CHAR = "49535343-1e4d-4bd9-ba61-23c647249616";
+
+    let responses = [];
+
+    try {
+      const service = await this.device.gatt.getPrimaryService(INFO_SERVICE);
+      const writeChar = await service.getCharacteristic(WRITE_CHAR);
+      const notifyChar = await service.getCharacteristic(NOTIFY_CHAR);
+
+      await notifyChar.startNotifications();
+
+      const handleNotification = (event) => {
+        const value = event.target.value;
+        // Store raw value for later processing
+        responses.push(new Uint8Array(value.buffer));
+      };
+
+      notifyChar.addEventListener('characteristicvaluechanged', handleNotification);
+
+      const packets = [
+        [0x10, 0xff, 0x50, 0xf1], // Battery in %
+        [0x10, 0xff, 0x20, 0xef], // HW Version
+        [0x10, 0xff, 0x20, 0xf0], // Name (P12)
+        [0x10, 0xff, 0x20, 0xf1], // FW Version
+        [0x10, 0xff, 0x20, 0xf2], // Serial Number
+      ];
+
+      for (const packet of packets) {
+        await writeChar.writeValue(new Uint8Array(packet));
+        await new Promise(r => setTimeout(r, 0)); // Wait 0ms between packets
+      }
+
+      await notifyChar.stopNotifications();
+      notifyChar.removeEventListener('characteristicvaluechanged', handleNotification);
+
+      // 1. Setup Parsers
+      const decoder = new TextDecoder('utf-8');
+
+      // Helper: Decodes text and removes null bytes/whitespace
+      const parseText = (buf) => buf ? decoder.decode(buf).trim() : 'N/A';
+
+      // Helper: specific BCD logic for Battery
+      const parseBattery = (buf) => {
+        if (!buf || buf.length < 2) return 'Unknown';
+        const val = (buf[1] >> 4) * 10 + (buf[1] & 0x0F);
+        return `${val} %`;
+      };
+
+      // 2. Define the Schema (The "What")
+      const fields = [
+        { label: "Battery", idx: 0, parser: parseBattery },
+        { label: "Hardware Version", idx: 1, parser: parseText },
+        { label: "Name", idx: 2, parser: parseText },
+        { label: "Firmware", idx: 3, parser: parseText },
+        { label: "Serial Number", idx: 4, parser: parseText },
+      ];
+
+      // 3. Generate Output (The "How")
+      // Calculate padding based on the longest label in the list
+      const padLen = Math.max(...fields.map(f => f.label.length));
+
+      const lines = fields
+        .filter(f => responses[f.idx]) // Only process if response exists (optional)
+        .map(f => {
+          const value = f.parser(responses[f.idx]);
+          return `${f.label.padEnd(padLen)} : ${value}`;
+        });
+
+      return lines.join('\n');
+
+    } catch (error) {
+      console.error("Error getting printer info:", error);
+      log("Error getting printer info: " + error);
+      return "Error: " + error.message;
+    }
+  }
 }

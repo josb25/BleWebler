@@ -5,7 +5,7 @@ const supportedPrinters = [
     namePrefix: "P12_", //prefix to search for in the name while connecting via BLE
     pattern: /^P12_.+?_BLE$/, //Pattern used to distinguish this printer from others after connecting via BLE
     printerClass: MarklifeP12Printer, // Class to instantiate
-    optionalServices: ["0000ff00-0000-1000-8000-00805f9b34fb"], // UUIDs needed
+    optionalServices: ["0000ff00-0000-1000-8000-00805f9b34fb", "49535343-fe7d-4ae5-8fa9-9fafd205e455"], // UUIDs needed
     px: 96, //printed width in px
     dpm: 8 //printer dots per mm (203 dpi)
   },
@@ -15,7 +15,7 @@ const supportedPrinters = [
     namePrefix: "P15_", //prefix to search for in the name while connecting via BLE
     pattern: /^P15_.+?_BLE$/, //Pattern used to distinguish this printer from others after connecting via BLE
     printerClass: MarklifeP12Printer, // Class to instantiate
-    optionalServices: ["0000ff00-0000-1000-8000-00805f9b34fb"], // UUIDs needed
+    optionalServices: ["0000ff00-0000-1000-8000-00805f9b34fb", "49535343-fe7d-4ae5-8fa9-9fafd205e455"], // UUIDs needed
     px: 96, //printed width in px
     dpm: 8 //printer dots per mm (203 dpi)
   },
@@ -39,30 +39,48 @@ const optionalServices = [
 let device = null;
 let printerInstance = null;
 
-async function printLabel() {
-  try {
-    if (device == null) {
-      device = await navigator.bluetooth.requestDevice({
-        filters: bluetoothFilters,
-        optionalServices: optionalServices
-      });
-    }
+async function connectPrinter() {
+  if (device && device.gatt.connected && printerInstance) {
+    return printerInstance;
+  }
 
-    // Find matching printer handler
+  try {
+    device = await navigator.bluetooth.requestDevice({
+      filters: bluetoothFilters,
+      optionalServices: optionalServices
+    });
+
     const printer = supportedPrinters.find(p => p.pattern.test(device.name));
 
     if (printer) {
       log(`Detected printer: ${device.name} -> matched ${printer.name}`);
-      const infinitePaperCheckbox = document.getElementById("infinitePaperCheckbox");
-      const isSegmented = infinitePaperCheckbox ? !infinitePaperCheckbox.checked : true; // Default to segmented if checkbox missing
       printerInstance = new printer.printerClass();
-      await printerInstance.print(device, constructBitmap(printer.px), isSegmented);
+      await printerInstance.connect(device);
+      return printerInstance;
     } else {
       log(`Unsupported printer model: ${device.name}`);
+      return null;
+    }
+  } catch (err) {
+    log("Bluetooth error: " + err);
+    throw err;
+  }
+}
+
+async function printLabel() {
+  try {
+    await connectPrinter();
+
+    if (printerInstance) {
+      const printer = supportedPrinters.find(p => p.pattern.test(device.name));
+      const infinitePaperCheckbox = document.getElementById("infinitePaperCheckbox");
+      const isSegmented = infinitePaperCheckbox ? !infinitePaperCheckbox.checked : true; // Default to segmented if checkbox missing
+
+      await printerInstance.print(device, constructBitmap(printer.px), isSegmented);
     }
 
   } catch (err) {
-    log("Bluetooth error: " + err);
+    console.error("Print failed:", err);
   }
 }
 

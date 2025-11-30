@@ -130,9 +130,40 @@ document.addEventListener("DOMContentLoaded", () => {
       // Gewählte Option einblenden
       if (type === "text") textDiv.style.display = "block";
       else if (type === "qrcode") qrDiv.style.display = "block";
-      else if (type === "info") qrDiv.style.display = "block";
+      else if (type === "info") {
+        infoDiv.style.display = "block";
+        handleInfoTab();
+      }
     });
   });
+
+  async function handleInfoTab() {
+    const infoDisplay = document.getElementById("printerInfoDisplay");
+    infoDisplay.textContent = "Connecting to printer...";
+
+    try {
+      // Ensure connectPrinter is available globally or imported
+      if (typeof connectPrinter === 'function') {
+        const printer = await connectPrinter();
+        if (printer) {
+          infoDisplay.textContent = "Retrieving information...";
+          const info = await printer.getPrinterInfo();
+          infoDisplay.textContent = info;
+        } else {
+          infoDisplay.textContent = "Could not connect to printer.";
+        }
+      } else {
+        infoDisplay.textContent = "Error: connectPrinter function not found.";
+      }
+    } catch (err) {
+      infoDisplay.textContent = "Error: " + err.message;
+    }
+  }
+
+  const refreshInfoBtn = document.getElementById("refreshInfoBtn");
+  if (refreshInfoBtn) {
+    refreshInfoBtn.addEventListener("click", handleInfoTab);
+  }
 
   // Initialen Zustand setzen
   const activeBtn = document.querySelector(".label-type-btn.active");
