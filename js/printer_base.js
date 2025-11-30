@@ -23,4 +23,14 @@ class PrinterBase {
             }
         }
     }
+
+    async disconnect() {
+        if (this.device && this.device.gatt.connected) {
+            await this.device.gatt.disconnect();
+            log("Printer has been removed.");
+            this.device = null;
+        } else {
+            log("No printer connected.");
+        }
+    }
 }

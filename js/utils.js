@@ -37,6 +37,7 @@ const optionalServices = [
 ];
 
 let device = null;
+let printerInstance = null;
 
 async function printLabel() {
   try {
@@ -54,7 +55,7 @@ async function printLabel() {
       log(`Detected printer: ${device.name} -> matched ${printer.name}`);
       const infinitePaperCheckbox = document.getElementById("infinitePaperCheckbox");
       const isSegmented = infinitePaperCheckbox ? !infinitePaperCheckbox.checked : true; // Default to segmented if checkbox missing
-      const printerInstance = new printer.printerClass();
+      printerInstance = new printer.printerClass();
       await printerInstance.print(device, constructBitmap(printer.px), isSegmented);
     } else {
       log(`Unsupported printer model: ${device.name}`);
@@ -62,6 +63,16 @@ async function printLabel() {
 
   } catch (err) {
     log("Bluetooth error: " + err);
+  }
+}
+
+async function disconnectPrinter() {
+  if (printerInstance) {
+    await printerInstance.disconnect();
+    printerInstance = null;
+    device = null;
+  } else {
+    log("No printer instance found to disconnect.");
   }
 }
 
@@ -82,15 +93,7 @@ function log(message) {
   console.log(message)
 }
 
-function disconnectPrinter() {
-  if (device && device.gatt.connected) {
-    device.gatt.disconnect();
-    log("Printer has been removed.");
-    device = null;
-  } else {
-    log("No printer connected.");
-  }
-}
+
 
 function constructBitmap(canvasHeight) {
   const fabricCanvas = getFabricCanvas();
