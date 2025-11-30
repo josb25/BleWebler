@@ -1,10 +1,6 @@
 let canvas;
 let fontSizeInput;
 let fontFamilyInput;
-let boldCheckbox;
-let italicCheckbox;
-let underlineCheckbox;
-let ditheringOptionsDiv; // New reference
 let ditheringAlgorithmSelect; // New reference
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -18,35 +14,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // Get references to control elements
   fontSizeInput = document.getElementById('fontSize');
   fontFamilyInput = document.getElementById('fontFamilyInput');
-  boldCheckbox = document.getElementById('bold');
-  italicCheckbox = document.getElementById('italic');
-  underlineCheckbox = document.getElementById('underline');
-  ditheringOptionsDiv = document.getElementById('ditheringOptions'); // Initialize new reference
   ditheringAlgorithmSelect = document.getElementById('ditheringAlgorithmSelect'); // Initialize new reference
 
-  // Add initial text
-  const initialText = new fabric.IText(document.getElementById('newTextContent').value || 'Hello World', {
-    left: 50,
-    top: 20,
-    fontFamily: fontFamilyInput.value || 'Arial', // Use fontFamilySelect
-    fontSize: parseFloat(fontSizeInput.value) || 48,
-    fill: '#000000',
-  });
-  canvas.add(initialText);
-  canvas.setActiveObject(initialText);
 
   // Event listener for object selection to update UI controls
-  canvas.on('selection:updated', updateTextControls);
+  canvas.on('selection:cleared', (e) => {
+    clearTextControls();
+    removeEmptyTextObjects(e);
+  });
+  canvas.on('selection:updated', (e) => {
+    updateTextControls();
+    removeEmptyTextObjects(e);
+  });
   canvas.on('selection:created', updateTextControls);
-  canvas.on('selection:cleared', clearTextControls);
   canvas.on('object:modified', handleObjectModified); // Update controls when object is modified (e.g., scaled)
 
   // Event listeners for styling controls
   // fontSizeInput.addEventListener('change', applyTextProperties); // Handled in ui.js
   // fontFamilySelect.addEventListener('change', applyTextProperties); // Handled in ui.js
-  boldCheckbox.addEventListener('change', applyTextProperties);
-  italicCheckbox.addEventListener('change', applyTextProperties);
-  underlineCheckbox.addEventListener('change', applyTextProperties);
 
   // Event listener for dithering algorithm selection
   if (ditheringAlgorithmSelect) {
@@ -64,45 +49,45 @@ document.addEventListener("DOMContentLoaded", () => {
           const imgDataUrl = event.target.result;
           // Create a temporary image element to get ImageData
           const tempImage = new Image();
-                      tempImage.onload = function() {
-                          const canvasWidth = canvas.getWidth();
-                          const canvasHeight = canvas.getHeight();
-          
-                          // Calculate scaling factors
-                          const scaleX = canvasWidth / tempImage.width;
-                          const scaleY = canvasHeight / tempImage.height;
-                          const initialScale = Math.min(scaleX, scaleY, 1); // Only scale down if image is larger than canvas
-          
-                          const targetWidth = tempImage.width * initialScale;
-                          const targetHeight = tempImage.height * initialScale;
-          
-                          // Get ImageData at the target scaled size
-                          const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight, false);
-          
-                          // Default dithering algorithm for now
-                          const currentDitheringAlgorithm = 'floyd-steinberg';
-                          const ditheredImageData = ditheringAlgorithms[currentDitheringAlgorithm](toGrayscale(originalImageData));
-                          const ditheredDataURL = imageDataToDataURL(ditheredImageData);
-          
-                          fabric.Image.fromURL(ditheredDataURL, function(img) {
-                              img.originalImageDataURL = imgDataUrl; // Store original URL
-                              img.ditheringAlgorithm = currentDitheringAlgorithm; // Store selected algorithm
-                              img.originalWidth = tempImage.width; // Store original width
-                              img.originalHeight = tempImage.height; // Store original height
-          
-                                                                      img.set({
-                                                                          scaleX: 1, // Image data is already scaled, so set base scale to 1
-                                                                          scaleY: 1, // Image data is already scaled, so set base scale to 1
-                                                                          left: 0, // Align to left
-                                                                          top: (canvasHeight - img.height) / 2, // Vertically center
-                                                                          isUploadedImage: true
-                                                                      });                              canvas.add(img);
-                              canvas.setActiveObject(img);
-                              canvas.renderAll();
-                          }, {
-                              crossOrigin: 'anonymous' // Important for loading external images, though data URL might not strictly need it
-                          });
-                      };          tempImage.src = imgDataUrl; // This will trigger tempImage.onload
+          tempImage.onload = function () {
+            const canvasWidth = canvas.getWidth();
+            const canvasHeight = canvas.getHeight();
+
+            // Calculate scaling factors
+            const scaleX = canvasWidth / tempImage.width;
+            const scaleY = canvasHeight / tempImage.height;
+            const initialScale = Math.min(scaleX, scaleY, 1); // Only scale down if image is larger than canvas
+
+            const targetWidth = tempImage.width * initialScale;
+            const targetHeight = tempImage.height * initialScale;
+
+            // Get ImageData at the target scaled size
+            const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight, false);
+
+            // Default dithering algorithm for now
+            const currentDitheringAlgorithm = 'floyd-steinberg';
+            const ditheredImageData = ditheringAlgorithms[currentDitheringAlgorithm](toGrayscale(originalImageData));
+            const ditheredDataURL = imageDataToDataURL(ditheredImageData);
+
+            fabric.Image.fromURL(ditheredDataURL, function (img) {
+              img.originalImageDataURL = imgDataUrl; // Store original URL
+              img.ditheringAlgorithm = currentDitheringAlgorithm; // Store selected algorithm
+              img.originalWidth = tempImage.width; // Store original width
+              img.originalHeight = tempImage.height; // Store original height
+
+              img.set({
+                scaleX: 1, // Image data is already scaled, so set base scale to 1
+                scaleY: 1, // Image data is already scaled, so set base scale to 1
+                left: 0, // Align to left
+                top: (canvasHeight - img.height) / 2, // Vertically center
+                isUploadedImage: true
+              }); canvas.add(img);
+              canvas.setActiveObject(img);
+              canvas.renderAll();
+            }, {
+              crossOrigin: 'anonymous' // Important for loading external images, though data URL might not strictly need it
+            });
+          }; tempImage.src = imgDataUrl; // This will trigger tempImage.onload
           e.target.value = ''; // Clear the input so the same file can be uploaded again
         };
         reader.readAsDataURL(file);
@@ -110,6 +95,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+function removeEmptyTextObjects(e) {
+  if (e.deselected) {
+    e.deselected.forEach(obj => {
+      if (obj.type === 'i-text' && (!obj.text || obj.text.trim() === '')) {
+        canvas.remove(obj);
+      }
+    });
+    canvas.renderAll();
+  }
+}
 
 function handleObjectModified(e) {
   const modifiedObject = e.target;
@@ -128,12 +124,12 @@ function reDitherImageOnScale(fabricImageObject) {
   const originalImageDataURL = fabricImageObject.originalImageDataURL;
   const ditheringAlgorithm = fabricImageObject.ditheringAlgorithm;
 
-      const tempImage = new Image();
-      tempImage.onload = function() {
-        const targetWidth = fabricImageObject.getScaledWidth();
-        const targetHeight = fabricImageObject.getScaledHeight();
-        const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight, false);
-        const ditheredImageData = ditheringAlgorithms[ditheringAlgorithm](toGrayscale(originalImageData));    const ditheredDataURL = imageDataToDataURL(ditheredImageData);
+  const tempImage = new Image();
+  tempImage.onload = function () {
+    const targetWidth = fabricImageObject.getScaledWidth();
+    const targetHeight = fabricImageObject.getScaledHeight();
+    const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight, false);
+    const ditheredImageData = ditheringAlgorithms[ditheringAlgorithm](toGrayscale(originalImageData)); const ditheredDataURL = imageDataToDataURL(ditheredImageData);
 
     // Get current scale and position to re-apply after source change
     const currentScaleX = fabricImageObject.scaleX;
@@ -143,7 +139,7 @@ function reDitherImageOnScale(fabricImageObject) {
     const currentAngle = fabricImageObject.angle;
 
     // Use setSrc to update the image data without replacing the object
-    fabricImageObject.setSrc(ditheredDataURL, function() {
+    fabricImageObject.setSrc(ditheredDataURL, function () {
       // After setSrc, Fabric.js has updated its internal width/height to the dithered image's dimensions.
       // Since the dithered image is already scaled to the desired size, set scaleX/Y to 1.
       fabricImageObject.set({
@@ -159,21 +155,29 @@ function reDitherImageOnScale(fabricImageObject) {
   tempImage.src = originalImageDataURL;
 }
 function addTextToCanvas() {
-  const textContent = document.getElementById('newTextContent').value;
-  if (!textContent) return;
+  const textContent = 'Type here';
 
   const newText = new fabric.IText(textContent, {
-    left: 50,
-    top: 50,
+    left: 0,
     fontFamily: fontFamilyInput.value || 'Arial', // Use fontFamilySelect
     fontSize: parseFloat(fontSizeInput.value) || 48,
     fill: '#000000',
-    fontWeight: boldCheckbox.checked ? 'bold' : 'normal',
-    fontStyle: italicCheckbox.checked ? 'italic' : 'normal',
-    underline: underlineCheckbox.checked,
+    fontWeight: 'normal', // Default to normal, will be set by toggleStyle if active
+    fontStyle: 'normal',  // Default to normal, will be set by toggleStyle if active
+    underline: false,     // Default to false, will be set by toggleStyle if active
+    textBaseline: 'alphabetic', // Explicitly set a valid textBaseline
+  });
+
+  // Center vertically
+  const canvasHeight = canvas.getHeight();
+  newText.set({
+    top: (canvasHeight - newText.getScaledHeight()) / 2
   });
   canvas.add(newText);
   canvas.setActiveObject(newText);
+  newText.enterEditing();
+  newText.selectAll();
+  canvas.renderAll();
   updateTextControls();
   canvas.renderAll();
 }
@@ -194,9 +198,6 @@ function applyTextProperties() {
     activeObject.set({
       fontSize: newFontSize,
       fontFamily: fontFamilyInput.value || activeObject.fontFamily, // Use fontFamilySelect
-      fontWeight: boldCheckbox.checked ? 'bold' : 'normal',
-      fontStyle: italicCheckbox.checked ? 'italic' : 'normal',
-      underline: underlineCheckbox.checked,
       scaleX: 1, // Reset scale when font size is manually set
       scaleY: 1, // Reset scale when font size is manually set
     });
@@ -208,56 +209,65 @@ function applyTextProperties() {
 
 function updateTextControls() {
   const activeObject = canvas.getActiveObject();
-  const newTextContentInput = document.getElementById('newTextContent');
-  const addTextButton = document.querySelector('button[onclick="addTextToCanvas()"]');
-  const deleteSelectedButton = document.querySelector('button[onclick="deleteSelectedObject()"]');
 
-  const textStyleControls = [
-    fontSizeInput,
-    fontFamilyInput,
-    boldCheckbox,
-    italicCheckbox,
-    underlineCheckbox,
-  ];
+  const textInputGroup = document.getElementById('text-input-group');
+  const fontStyleGroup = document.getElementById('font-style-group');
+  const textFormatGroup = document.getElementById('text-format-group');
+  const alignmentGroup = document.getElementById('alignment-group');
+  const imageControlsGroup = document.getElementById('image-controls-group');
+  const objectSpecificControlsBox = document.getElementById('object-specific-controls');
 
-  if (activeObject && activeObject.type === 'i-text') {
-    textStyleControls.forEach(control => control.disabled = false);
-    newTextContentInput.disabled = false;
-    addTextButton.disabled = false;
-    deleteSelectedButton.disabled = false;
+  // Groups that are object-specific styling controls
+  const textStylingGroups = [fontStyleGroup, textFormatGroup];
+  const imageStylingGroup = imageControlsGroup;
 
-    const effectiveFontSize = Math.round(activeObject.fontSize * activeObject.scaleY);
-    fontSizeInput.value = effectiveFontSize;
-    fontFamilyInput.value = activeObject.fontFamily;
-    boldCheckbox.checked = activeObject.fontWeight === 'bold';
-    italicCheckbox.checked = activeObject.fontStyle === 'italic';
-    underlineCheckbox.checked = activeObject.underline;
-    newTextContentInput.value = activeObject.text; // Update text content input
+  // Hide all object-specific groups initially
+  textStylingGroups.forEach(group => {
+    if (group) group.style.display = 'none';
+  });
+  if (imageStylingGroup) imageStylingGroup.style.display = 'none';
 
-    ditheringOptionsDiv.style.display = 'none'; // Hide dithering options for text
-  } else if (activeObject && activeObject.type === 'image') {
-    textStyleControls.forEach(control => control.disabled = true);
-    newTextContentInput.disabled = true;
-    addTextButton.disabled = false; // Still allow adding new text
-    deleteSelectedButton.disabled = false; // Still allow deleting images
-    clearTextControls(); // Clear text control values
+  // The general controls (text input, alignment) are always visible based on the HTML structure.
 
-    // Show dithering options for images
-    ditheringOptionsDiv.style.display = 'block';
-    if (activeObject.ditheringAlgorithm) {
-      ditheringAlgorithmSelect.value = activeObject.ditheringAlgorithm;
-    } else {
-      ditheringAlgorithmSelect.value = 'none'; // Default if not set
+  if (activeObject) {
+    if (objectSpecificControlsBox) objectSpecificControlsBox.style.display = 'block';
+
+    if (activeObject.type === 'i-text') {
+      // Show text styling groups
+      textStylingGroups.forEach(group => {
+        if (group) group.style.display = 'flex';
+      });
+
+      const effectiveFontSize = Math.round(activeObject.fontSize * activeObject.scaleY);
+      fontSizeInput.value = effectiveFontSize;
+      fontFamilyInput.value = activeObject.fontFamily;
+
+      document.querySelectorAll('.toggle-btn').forEach(button => {
+        const property = button.dataset.property;
+        let isActive = false;
+        if (property === 'bold') isActive = activeObject.fontWeight === 'bold';
+        else if (property === 'italic') isActive = activeObject.fontStyle === 'italic';
+        else if (property === 'underline') isActive = activeObject.underline;
+        button.classList.toggle('active', isActive);
+      });
+    } else if (activeObject.type === 'image') {
+      // Show image styling group
+      if (imageStylingGroup) imageStylingGroup.style.display = 'flex';
+
+      if (ditheringAlgorithmSelect) {
+        if (activeObject.ditheringAlgorithm) {
+          ditheringAlgorithmSelect.value = activeObject.ditheringAlgorithm;
+        } else {
+          ditheringAlgorithmSelect.value = 'none';
+        }
+      }
     }
   } else {
-    // No object selected
-    textStyleControls.forEach(control => control.disabled = false);
-    newTextContentInput.disabled = false;
-    addTextButton.disabled = false;
-    deleteSelectedButton.disabled = true; // No object to delete
-    newTextContentInput.value = ''; // Clear new text content input
-    clearTextControls(); // Reset text control values to default
-    ditheringOptionsDiv.style.display = 'none'; // Hide dithering options
+    // No object selected, hide the object-specific box
+    if (objectSpecificControlsBox) objectSpecificControlsBox.style.display = 'none';
+
+    // Ensure controls are reset
+    clearTextControls();
   }
 }
 
@@ -265,9 +275,9 @@ function clearTextControls() {
   // Reset to default or clear when no text object is selected
   fontSizeInput.value = '48';
   fontFamilyInput.value = 'Arial';
-  boldCheckbox.checked = false;
-  italicCheckbox.checked = false;
-  underlineCheckbox.checked = false;
+  document.querySelectorAll('.toggle-btn').forEach(button => {
+    button.classList.remove('active');
+  });
 }
 
 // Function to re-apply dithering to the active image
@@ -277,13 +287,13 @@ function applyDitheringToActiveImage() {
     const selectedAlgorithm = ditheringAlgorithmSelect.value;
     activeObject.ditheringAlgorithm = selectedAlgorithm; // Update the stored algorithm
 
-        const tempImage = new Image();
-        tempImage.onload = function() {
-          const targetWidth = activeObject.getScaledWidth();
-          const targetHeight = activeObject.getScaledHeight();
-          const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight);
-          // Apply dithering (to grayscale first)
-          const ditheredImageData = ditheringAlgorithms[selectedAlgorithm](toGrayscale(originalImageData));      const ditheredDataURL = imageDataToDataURL(ditheredImageData);
+    const tempImage = new Image();
+    tempImage.onload = function () {
+      const targetWidth = activeObject.getScaledWidth();
+      const targetHeight = activeObject.getScaledHeight();
+      const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight);
+      // Apply dithering (to grayscale first)
+      const ditheredImageData = ditheringAlgorithms[selectedAlgorithm](toGrayscale(originalImageData)); const ditheredDataURL = imageDataToDataURL(ditheredImageData);
 
       // Preserve current position and scale
       const currentScaleX = activeObject.scaleX;
@@ -291,7 +301,7 @@ function applyDitheringToActiveImage() {
       const currentLeft = activeObject.left;
       const currentTop = activeObject.top;
 
-      fabric.Image.fromURL(ditheredDataURL, function(newImg) {
+      fabric.Image.fromURL(ditheredDataURL, function (newImg) {
         // Replace the old image object with the new dithered one
         canvas.remove(activeObject);
         // The newImg's intrinsic width/height are already scaled to the desired size.
@@ -315,12 +325,12 @@ function applyDitheringToActiveImage() {
 }
 
 // Expose canvas for utils.js to access it
-window.getFabricCanvas = function() {
+window.getFabricCanvas = function () {
   return canvas;
 }
 
 window.fabricEditor = {
-  setTextAlign: function(alignment) {
+  setTextAlign: function (alignment) {
     const activeObject = canvas.getActiveObject();
     if (!activeObject) return;
 
@@ -356,7 +366,7 @@ window.fabricEditor = {
     canvas.renderAll();
   },
 
-  setVerticalAlign: function(alignment) {
+  setVerticalAlign: function (alignment) {
     const activeObject = canvas.getActiveObject();
     if (!activeObject) return;
 
@@ -389,7 +399,7 @@ window.fabricEditor = {
     canvas.renderAll();
   },
 
-  setFontFamily: function(fontFamily) {
+  setFontFamily: function (fontFamily) {
     const activeObject = canvas.getActiveObject();
     if (activeObject && activeObject.type === 'i-text') {
       activeObject.set({ fontFamily: fontFamily });
@@ -398,18 +408,49 @@ window.fabricEditor = {
     }
   },
 
-  setFontSize: function(fontSize) {
+  setFontSize: function (fontSize) {
     const activeObject = canvas.getActiveObject();
     if (activeObject && activeObject.type === 'i-text') {
-      activeObject.set({ fontSize: fontSize });
+      activeObject.set({
+        fontSize: fontSize,
+        scaleX: 1,
+        scaleY: 1
+      });
       canvas.renderAll();
       updateTextControls(); // Update UI to reflect change
     }
   },
 
-  getActiveObject: function() {
+  getActiveObject: function () {
     return canvas.getActiveObject();
   },
 
+  toggleStyle: function (property) {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject && activeObject.type === 'i-text') {
+      let value;
+      if (property === 'bold') {
+        value = activeObject.fontWeight === 'bold' ? 'normal' : 'bold';
+        activeObject.set({ fontWeight: value });
+      } else if (property === 'italic') {
+        value = activeObject.fontStyle === 'italic' ? 'normal' : 'italic';
+        activeObject.set({ fontStyle: value });
+      } else if (property === 'underline') {
+        value = !activeObject.underline;
+        activeObject.set({ underline: value });
+      }
+      canvas.renderAll();
+      updateTextControls(); // Update UI to reflect change
+      return value; // Return the new state
+    }
+    return false;
+  },
 
+  updateCanvasSize: function (width, height) {
+    if (canvas) {
+      canvas.setWidth(width);
+      canvas.setHeight(height);
+      canvas.renderAll();
+    }
+  }
 };

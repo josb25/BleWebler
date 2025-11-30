@@ -2,316 +2,664 @@
    Design tokens
    ========================================= */
 :root {
-  --control-h: 44px;       /* canonical height for single-line inputs & buttons */
-  --border-w: 1px;         /* standard border width */
-  --radius: 6px;           /* standard border radius */
-  --pad-x: 0.75em;         /* horizontal padding for controls */
-  --font-size: 1rem;       /* base font size for form controls */
-  --line-tight: 1.2;       /* line-height for single-line controls */
-  --line-body: 1.25;       /* line-height for multi-line text */
-  --c-bg: #fff;            /* control background */
-  --c-bdr: #ccc;           /* control border */
-  --c-text: #000;          /* control text color */
-  --btn-bg: #333;          /* button bg */
-  --btn-bg-hover: #555;    /* button hover bg */
+  /* Colors */
+  --primary: #6366f1;
+  /* Indigo 500 */
+  --primary-hover: #4f46e5;
+  /* Indigo 600 */
+  --secondary: #64748b;
+  /* Slate 500 */
+  --secondary-hover: #475569;
+  /* Slate 600 */
+  --danger: #ef4444;
+  /* Red 500 */
+  --danger-hover: #dc2626;
+  /* Red 600 */
+
+  --bg-body: #f8fafc;
+  /* Slate 50 */
+  --bg-card: #ffffff;
+  --bg-input: #f1f5f9;
+  /* Slate 100 */
+
+  --text-main: #0f172a;
+  /* Slate 900 */
+  --text-muted: #64748b;
+  /* Slate 500 */
+  --text-light: #ffffff;
+
+  --border-color: #e2e8f0;
+  /* Slate 200 */
+
+  /* Spacing & Sizes */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  --control-height: 2.75rem;
+  padding: var(--spacing-md);
 }
 
-/* =========================================
-   Page basics
-   ========================================= */
-body {
-  font-family: sans-serif;
-  margin: 1em;
-  padding: 0;
-  text-align: center; /* page layout only; controls reset to left below */
-  color: var(--c-text);
-}
-
-.container {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 1em;
-}
-
-/* =========================================
-   Form control reset & shared typography
-   (Prevents body{text-align:center} from affecting inputs)
-   ========================================= */
-input, select, textarea, button {
-  font: inherit;
-  font-size: var(--font-size);
-  color: inherit;
-  letter-spacing: inherit;
-  text-align: left; /* ensure text inside controls is left-aligned */
-  box-sizing: border-box;
-}
-
-/* Make action buttons auto-width and centered */
-button,
-input[type="button"] {
-  width: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0.5em auto;            /* centers the button in the container */
-  padding: 0 1em;
-}
-
-/* Keep form fields full-width */
-.container input[type="text"],
-.container input[type="number"],
-.container select,
-.container textarea {
-  width: 100%;
+img,
+svg {
+  display: block;
   max-width: 100%;
 }
 
+/* =========================================
+   Layout
+   ========================================= */
+.container {
+  max-width: 600px;
+  /* Slightly wider for better canvas fit */
+  margin: 0 auto;
+  padding: var(--spacing-md);
+}
 
+header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: var(--spacing-xs);
+  letter-spacing: -0.025em;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
 
 /* =========================================
-   Single-line controls (text inputs, select)
-   Visual height is controlled by explicit height
-   with vertical padding calculated for optical centering.
+   Components
    ========================================= */
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-height);
+  padding: 0 var(--spacing-lg);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: var(--spacing-sm);
+  color: var(--text-light);
+  background-color: var(--primary);
+}
+
+.btn:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: #e2e8f0;
+  color: var(--text-main);
+}
+
+.btn-icon {
+  padding: 0;
+  width: var(--control-height);
+  height: var(--control-height);
+  border-radius: var(--radius-md);
+}
+
+.btn-danger {
+  background-color: var(--danger);
+}
+
+.btn-danger:hover {
+  background-color: var(--danger-hover);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* Inputs */
 input[type="text"],
 input[type="number"],
 select {
-  height: var(--control-h);
+  height: var(--control-height);
+  padding: 0 var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  font-size: 0.875rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
   width: 100%;
-  max-width: 100%;
-  margin: 0.5em 0;
-
-  /* Use a normal line-height (readable), do NOT bind it to height */
-  line-height: var(--line-tight);
-
-  /* Vertical centering via padding-block:
-     height - (font-size * line-height) - borders -> split by two */
-  padding-inline: var(--pad-x);
-  padding-block: calc((var(--control-h) - (1em * var(--line-tight)) - (2 * var(--border-w))) / 2);
-
-  border: var(--border-w) solid var(--c-bdr);
-  border-radius: var(--radius);
-  background: var(--c-bg);
-  appearance: none;
-  -webkit-appearance: none;
-  transition: background 0.2s;
 }
 
-/* =========================================
-   Multi-line control (textarea)
-   Behaves like a proper multi-line field with
-   comfortable line-height and padding.
-   ========================================= */
-textarea {
-  width: 100%;
-  max-width: 100%;
-  margin: 0.5em 0;
-
-  /* Let height grow with content (JS can enhance to true auto-resize) */
-  height: auto;
-  min-height: var(--control-h);
-  resize: none;             /* allow user to adjust vertically */
-
-  line-height: var(--line-body);
-  padding: 0.35em var(--pad-x); /* subtle top/bottom breathing room */
-
-  border: var(--border-w) solid var(--c-bdr);
-  border-radius: var(--radius);
-  background: var(--c-bg);
-  appearance: none;
-  -webkit-appearance: none;
-  transition: background 0.2s;
-
-  /* Prevent a few extra pixels from a vertical scrollbar until needed */
-  overflow-y: hidden;
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  background-color: var(--bg-card);
 }
 
-/* =========================================
-   Buttons
-   ========================================= */
-button,
-input[type="button"] {
-  height: var(--control-h);
-  width: 100%;
-  max-width: 100%;
-  margin: 0.5em 0;
-  padding: 0 1em;               /* horizontal padding; height fixes vertical */
-
-  border: none;
-  border-radius: var(--radius);
-  background: var(--btn-bg);
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-button:hover,
-input[type="button"]:hover {
-  background: var(--btn-bg-hover);
-}
-
-/* Text-only, subtle action button (e.g., "Advanced") */
-.advanced-toggle {
-  background: transparent;
-  color: #666;
-  font-size: 0.9em;
-  border: none;
-  padding: 0.25em 0.5em;
-  text-decoration: underline;
-  cursor: pointer;
-}
-.advanced-toggle:hover {
-  background: transparent;
-  color: #000;
-}
-
-/* =========================================
-   Labels
-   ========================================= */
-label {
-  display: block;
-  text-align: left;
-  margin-top: 1em;
-  font-weight: bold;
-}
-
-/* =========================================
-   Options row (checkboxes, radios, small inputs)
-   ========================================= */
-.options {
+/* Label Selector (Tabs) */
+.label-type-selector {
   display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5em;
-  margin-top: 0.5em;
-}
-.options label {
-  font-weight: normal;
-  flex: 1 1 auto;
-  white-space: nowrap;
+  background: var(--bg-input);
+  padding: 4px;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
-/* =========================================
-   Input group (text field + upload button in one row)
-   ========================================= */
-.input-group {
-  display: flex;
-  align-items: center;  /* vertical centering of the two items */
-  gap: 0.5em;
-  margin: 0.5em 0;
-}
-
-/* Inline label inside the group acts like a button (e.g., upload) */
-.input-group > label {
-  display: inline-flex;
-  margin-top: 0;        /* override global label margin */
-  text-align: center;
-  font-weight: normal;
-}
-
-/* Left side: single-line input inside the group */
-.input-group .input {
+.label-type-btn {
   flex: 1;
-  width: auto;          /* let flex decide width */
-  height: var(--control-h);
-  line-height: var(--line-tight);
-  padding-inline: var(--pad-x);
-  padding-block: calc((var(--control-h) - (1em * var(--line-tight)) - (2 * var(--border-w))) / 2);
-
-  border: var(--border-w) solid var(--c-bdr);
-  border-radius: var(--radius);
-  background: var(--c-bg);
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-/* If the left control is a textarea, keep it multi-line (do NOT force 44px) */
-.input-group textarea.input {
-  height: var(--control-h);
-  min-height: var(--control-h);
-  line-height: var(--line-body);
-  padding: 0.75em var(--pad-x);
-  overflow-y: hidden;
-}
-
-/* Right side: upload button styled like a primary button */
-.btn.upload-btn {
-  display: inline-flex;
+  background: transparent;
+  border: none;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  display: flex;
   align-items: center;
   justify-content: center;
-  height: var(--control-h);
-  padding: 0 1em;
-  background: var(--btn-bg);
-  color: #fff;
+  gap: var(--spacing-sm);
+}
+
+.label-type-btn.active {
+  background: var(--bg-card);
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.label-type-btn i {
+  font-size: 1.1em;
+}
+
+/* Canvas Area */
+.canvas-container-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--bg-input);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  /* Prevent canvas overflow */
+}
+
+#fabricCanvas {
+  box-shadow: var(--shadow-sm);
+  background: white;
+}
+
+/* Control Groups */
+.control-group {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  align-items: center;
+}
+
+.control-group.wrap {
+  flex-wrap: wrap;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+/* Button Group (Joined Buttons) */
+.button-group {
+  display: flex;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.button-group .btn {
+  border-radius: 0;
   border: none;
-  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-color);
+  flex: 1;
+}
+
+.button-group .btn:last-child {
+  border-right: none;
+}
+
+.button-group .btn:hover {
+  background: var(--bg-input);
+  color: var(--text-main);
+}
+
+.button-group .btn.active {
+  background: var(--bg-input);
+  color: var(--primary);
+}
+
+/* Advanced Section */
+.advanced-toggle {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: background 0.2s;
-}
-.btn.upload-btn:hover { background: var(--btn-bg-hover); }
-
-.btn.upload-btn svg {
+  text-decoration: underline;
+  margin-top: var(--spacing-md);
   display: block;
-  width: 20px;
-  height: 20px;
-  fill: currentColor;
+  width: 100%;
+  text-align: center;
 }
 
-/* =========================================
-   Accessible "visually hidden" utility
-   ========================================= */
+.advanced-toggle:hover {
+  color: var(--text-main);
+}
+
+#logOutput {
+  font-family: monospace;
+  font-size: 0.75rem;
+  background: var(--text-main);
+  color: #22c55e;
+  /* Terminal green */
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-md);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .control-group {
+    flex-wrap: wrap;
+  }
+
+  .btn-icon {
+    flex: 1;
+    /* Make icon buttons expand on mobile for easier touch */
+  }
+
+  .button-group {
+    width: 100%;
+  }
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  gap: var(--spacing-sm);
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: relative;
+  display: inline-block;
+  width: 3rem;
+  height: 1.5rem;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  /* Pill shape */
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1rem;
+  width: 1rem;
+  left: 0.25rem;
+  bottom: 0.2rem;
+  background-color: var(--text-muted);
+  border-radius: 50%;
+  transition: .4s;
+}
+
+input:checked+.slider {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+input:focus+.slider {
+  box-shadow: 0 0 1px var(--primary);
+}
+
+input:checked+.slider:before {
+  transform: translateX(1.5rem);
+  background-color: white;
+}
+
+/* Icons */
+.icon {
+  width: 1.25em;
+  height: 1.25em;
+  fill: currentColor;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.btn .icon {
+  margin-right: 0;
+  /* Handled by gap in .btn */
+}
+
+/* Utilities */
 .visually-hidden {
-  position: absolute !important;
+  position: absolute;
   width: 1px;
   height: 1px;
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0 0 0 0);
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
 }
 
-
-
-#labelPreview {
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  border: 1px solid #bbb;
-  background: #fff;
+.label-type-btn i {
+  font-size: 1.1em;
 }
 
-
-
-
-.label-type-selector {
+/* Canvas Area */
+.canvas-container-wrapper {
   display: flex;
-  gap: 0.1em;
-  margin-bottom: 1em;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--bg-input);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  /* Prevent canvas overflow */
 }
 
-/* Apply rounded corners to the LEFT side of the first button */
-.label-type-selector .label-type-btn:first-child {
-  border-top-left-radius: 4px;
-  border-bottom-left-radius: 4px;
+#fabricCanvas {
+  box-shadow: var(--shadow-sm);
+  background: white;
 }
 
-/* Apply rounded corners to the RIGHT side of the last button */
-.label-type-selector .label-type-btn:last-child {
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 4px;
+/* Control Groups */
+.control-group {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  align-items: center;
 }
 
-.label-type-btn {
+.control-group.wrap {
+  flex-wrap: wrap;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+/* Button Group (Joined Buttons) */
+.button-group {
+  display: flex;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.button-group .btn {
+  border-radius: 0;
+  border: none;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-color);
   flex: 1;
-  padding: 0.5em 1em;
-  border: 0px solid #ccc;
-  border-radius: 0px;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
 }
 
-.label-type-btn.active {
-  background: #8b68ff;
-  color: white;
+.button-group .btn:last-child {
+  border-right: none;
+}
+
+.button-group .btn:hover {
+  background: var(--bg-input);
+  color: var(--text-main);
+}
+
+.button-group .btn.active {
+  background: var(--bg-input);
+  color: var(--primary);
+}
+
+/* Advanced Section */
+.advanced-toggle {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: var(--spacing-md);
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.advanced-toggle:hover {
+  color: var(--text-main);
+}
+
+#logOutput {
+  font-family: monospace;
+  font-size: 0.75rem;
+  background: var(--text-main);
+  color: #22c55e;
+  /* Terminal green */
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-md);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .control-group {
+    flex-wrap: wrap;
+  }
+
+  .btn-icon {
+    flex: 1;
+    /* Make icon buttons expand on mobile for easier touch */
+  }
+
+  .button-group {
+    width: 100%;
+  }
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  gap: var(--spacing-sm);
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: relative;
+  display: inline-block;
+  width: 3rem;
+  height: 1.5rem;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  /* Pill shape */
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1rem;
+  width: 1rem;
+  left: 0.25rem;
+  bottom: 0.2rem;
+  background-color: var(--text-muted);
+  border-radius: 50%;
+  transition: .4s;
+}
+
+input:checked+.slider {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+input:focus+.slider {
+  box-shadow: 0 0 1px var(--primary);
+}
+
+input:checked+.slider:before {
+  transform: translateX(1.5rem);
+  background-color: white;
+}
+
+/* Icons */
+.icon {
+  width: 1.25em;
+  height: 1.25em;
+  fill: currentColor;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.btn .icon {
+  margin-right: 0;
+  /* Handled by gap in .btn */
+}
+
+/* Utilities */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  /* Hidden by default */
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* Black w/ opacity */
+  backdrop-filter: blur(5px);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: var(--bg-card);
+  margin: auto;
+  padding: var(--spacing-xl);
+  border: 1px solid var(--border-color);
+  width: 90%;
+  max-width: 500px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.modal h2 {
+  margin-top: 0;
+  color: var(--text-main);
+  margin-bottom: var(--spacing-sm);
+}
+
+.modal p {
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+/* Show modal when active */
+.modal.show {
+  display: block;
 }

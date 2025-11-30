@@ -1,95 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title> BleWebler - Open Source BLE Web Labeler </title>
+  <title>BleWebler - Open Source BLE Web Labeler</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
   <div class="container">
-    <h1>BleWebler</h1>
+    <header>
+      <h1>BleWebler</h1>
+      <p class="subtitle">Open Source BLE Web Labeler</p>
+    </header>
 
-    <!-- <label for="labelType">Type of Content:</label> -->
-    <div class="label-type-selector">
-      <button class="label-type-btn active" data-type="text">Text</button>
-      <button class="label-type-btn" data-type="qrcode">QR-Code</button>
-      <button class="label-type-btn" data-type="info">Info</button>
-    </div>
-
-
-    <div id="textOptions">
-      <canvas id="fabricCanvas" width="384" height="96" style="border:1px solid #ccc;"></canvas>
-      <div style="margin-top: 10px;">
-        <input type="text" id="newTextContent" placeholder="Enter text" value="Hello World" />
-        <button onclick="addTextToCanvas()">Add Text</button>
-        <button onclick="deleteSelectedObject()">Delete Selected</button>
+    <main>
+      <!-- Mode Selector -->
+      <div class="label-type-selector">
+        <button class="label-type-btn active" data-type="text">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M4 4h16v2H4V4zm6 4h4v12h-4V8z" />
+          </svg> Text
+        </button>
+        <button class="label-type-btn" data-type="qrcode">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path
+              d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm8 2h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm2-2h2v2h-2v-2zm2 2h2v2h-2v-2z" />
+          </svg> QR Code
+        </button>
+        <button class="label-type-btn" data-type="info">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+          </svg> Info
+        </button>
       </div>
 
-      <div style="margin-top: 10px;">
-        <label for="fontSize">Font Size (px):</label>
-        <input type="number" id="fontSize" value="48" min="1" />
-        <label for="fontFamilySelect">Font Family:</label>
-        <input type="text" id="fontFamilyInput" list="fontList" value="Arial" />
-        <datalist id="fontList"></datalist>
-        <button id="loadSystemFontsBtn">Load System Fonts</button>
+      <!-- Text Mode Options -->
+      <section id="textOptions" class="card">
+        <div class="canvas-container-wrapper">
+          <canvas id="fabricCanvas" width="384" height="96"></canvas>
+        </div>
+
+        <!-- General Controls -->
+        <div id="general-controls-box">
+          <div id="text-input-group" class="control-group">
+            <button onclick="addTextToCanvas()" class="btn btn-icon" title="Add Text">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M5 4v3h5.5v12h3V7H19V4z" />
+              </svg>
+            </button>
+            <button onclick="document.getElementById('imageUploadInput').click()" class="btn btn-icon btn-secondary"
+              title="Upload Image">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path
+                  d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+              </svg>
+            </button>
+            <input type="file" id="imageUploadInput" accept="image/*" class="visually-hidden" />
+            <button onclick="deleteSelectedObject()" class="btn btn-icon btn-danger" title="Delete Selected">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+              </svg>
+            </button>
+          </div>
+
+          <div id="alignment-group" class="control-group">
+            <div class="button-group flex-grow">
+              <button onclick="setTextAlign('left')" class="btn" title="Align Left">
+                <svg class="icon" viewBox="0 -960 960 960">
+                  <path d="M80-80v-800h80v800H80Zm160-200v-120h400v120H240Zm0-280v-120h640v120H240Z" />
+                </svg>
+              </button>
+              <button onclick="setTextAlign('center')" class="btn" title="Align Center">
+                <svg class="icon" viewBox="0 -960 960 960">
+                  <path
+                    d="M440-80v-200H240v-120h200v-160H120v-120h320v-200h80v200h320v120H520v160h200v120H520v200h-80Z" />
+                </svg>
+              </button>
+              <button onclick="setTextAlign('right')" class="btn" title="Align Right">
+                <svg class="icon" viewBox="0 -960 960 960">
+                  <path d="M800-80v-800h80v800h-80ZM320-280v-120h400v120H320ZM80-560v-120h640v120H80Z" />
+                </svg>
+              </button>
+            </div>
+            <div class="button-group flex-grow">
+              <button onclick="setVerticalAlign('top')" class="btn" title="Align Top">
+                <svg class="icon" viewBox="0 -960 960 960">
+                  <path d="M280-80v-640h120v640H280Zm280-240v-400h120v400H560ZM80-800v-80h800v80H80Z" />
+                </svg>
+              </button>
+              <button onclick="setVerticalAlign('middle')" class="btn" title="Align Middle">
+                <svg class="icon" viewBox="0 -960 960 960">
+                  <path
+                    d="M280-120v-320H80v-80h200v-320h120v320h160v-200h120v200h200v80H680v200H560v-200H400v320H280Z" />
+                </svg>
+              </button>
+              <button onclick="setVerticalAlign('bottom')" class="btn" title="Align Bottom">
+                <svg class="icon" viewBox="0 -960 960 960">
+                  <path d="M80-80v-80h800v80H80Zm200-160v-640h120v640H280Zm280 0v-400h120v400H560Z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Object Specific Controls -->
+        <div id="object-specific-controls" class="mt-4">
+          <div id="font-style-group" class="control-group">
+            <input type="number" id="fontSize" value="48" min="1" title="Font Size" style="width: 80px;" />
+            <input type="text" id="fontFamilyInput" list="fontList" value="Arial" placeholder="Font Family"
+              class="flex-grow" />
+            <datalist id="fontList"></datalist>
+            <button id="loadSystemFontsBtn" class="btn btn-icon btn-secondary" title="Load System Fonts">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path
+                  d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z" />
+              </svg>
+            </button>
+          </div>
+
+          <div id="text-format-group" class="button-group mb-4">
+            <button class="toggle-btn btn" data-property="bold" title="Bold">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path
+                  d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z" />
+              </svg>
+            </button>
+            <button class="toggle-btn btn" data-property="italic" title="Italic">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z" />
+              </svg>
+            </button>
+            <button class="toggle-btn btn" data-property="underline" title="Underline">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path
+                  d="M12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6zm-7 2v2h14v-2H5z" />
+              </svg>
+            </button>
+          </div>
+
+          <div id="image-controls-group" class="control-group" style="display: none;">
+            <select id="ditheringAlgorithmSelect" title="Dithering Algorithm" class="flex-grow">
+              <option value="none">No Dithering</option>
+              <option value="floyd-steinberg">Floyd-Steinberg</option>
+              <option value="atkinson">Atkinson</option>
+              <option value="bayer">Bayer</option>
+              <option value="binary-threshold">Binary Threshold</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="control-group mt-4">
+          <label class="toggle-switch">
+            <input type="checkbox" id="segmentedPaper" />
+            <span class="slider"></span>
+            <span>Segmented Paper</span>
+          </label>
+        </div>
+      </section>
+
+      <div id="qrcodeOptions" class="card" style="display:none;">
+        <p class="text-muted">Work in Progress.</p>
       </div>
 
-      <div style="margin-top: 10px;">
-        <label>Text Alignment:</label>
-        <button onclick="setTextAlign('left')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M80-80v-800h80v800H80Zm160-200v-120h400v120H240Zm0-280v-120h640v120H240Z"/></svg></button>
-        <button onclick="setTextAlign('center')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M440-80v-200H240v-120h200v-160H120v-120h320v-200h80v200h320v120H520v160h200v120H520v200h-80Z"/></svg></button>
-        <button onclick="setTextAlign('right')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M800-80v-800h80v800h-80ZM320-280v-120h400v120H320ZM80-560v-120h640v120H80Z"/></svg></button>
+      <div id="infoOptions" class="card" style="display:none;">
+        <p class="text-muted">Work in Progress.</p>
       </div>
 
-      <div style="margin-top: 10px;">
-        <label>Vertical Alignment:</label>
-        <button onclick="setVerticalAlign('top')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M280-80v-640h120v640H280Zm280-240v-400h120v400H560ZM80-800v-80h800v80H80Z"/></svg></button>
-        <button onclick="setVerticalAlign('middle')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M280-120v-320H80v-80h200v-320h120v320h160v-200h120v200h200v80H680v200H560v-200H400v320H280Z"/></svg></button>
-        <button onclick="setVerticalAlign('bottom')"><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M80-80v-80h800v80H80Zm200-160v-640h120v640H280Zm280 0v-400h120v400H560Z"/></svg></button>
+      <button id="printButton" class="btn btn-block" style="height: 3.5rem; font-size: 1.1rem;">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path
+            d="M19 8h-1V3H6v5H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zM8 5h8v3H8V5zm8 12v2H8v-4h8v2zm2-2v-2H6v2H4v-4c0-.55.45-1 1-1h14c.55 0 1 .45 1 1v4h-2z" />
+        </svg>
+        Print Label
+      </button>
+
+      <button class="advanced-toggle" onclick="toggleAdvanced()">Show Advanced Options</button>
+
+      <div id="advancedSection" style="display: none;">
+        <button onclick="disconnectPrinter()" class="btn btn-secondary btn-sm mt-4">Disconnect Printer</button>
+        <pre id="logOutput"></pre>
       </div>
+    </main>
+    <!-- Printer Selection Modal -->
+    <div id="startupModal" class="modal">
+      <div class="modal-content">
+        <h2>Setup Printer</h2>
+        <p>Please select your printer and paper size.</p>
 
-      <div class="options">
-        <label><input type="checkbox" id="bold" />Bold</label>
-        <label><input type="checkbox" id="italic" />Italic</label>
-        <label><input type="checkbox" id="underline" />Underline</label>
-        <label><input type="checkbox" id="segmentedPaper" />Segmented Paper</label>
+        <div class="form-group">
+          <label for="printerSelect">Printer Model:</label>
+          <select id="printerSelect"></select>
+        </div>
+
+        <div class="form-group">
+          <label for="paperWidth">Paper Width (mm):</label>
+          <input type="number" id="paperWidth" value="40" min="10" max="100">
+        </div>
+
+        <div class="form-group">
+          <label for="paperHeight">Paper Height (mm):</label>
+          <input type="number" id="paperHeight" value="12" min="10" max="300">
+        </div>
+
+        <button id="startBtn" class="btn btn-primary btn-block">Start Labeling</button>
       </div>
-
-      <div style="margin-top: 10px;">
-        <label for="imageUploadInput">Upload Image:</label>
-        <input type="file" id="imageUploadInput" accept="image/*" />
-      </div>
-
-      <div style="margin-top: 10px;" id="ditheringOptions" style="display:none;">
-        <label for="ditheringAlgorithmSelect">Dithering Algorithm:</label>
-        <select id="ditheringAlgorithmSelect">
-          <option value="none">None</option>
-          <option value="floyd-steinberg">Floyd-Steinberg</option>
-          <option value="atkinson">Atkinson</option>
-          <option value="bayer">Bayer</option>
-          <option value="binary-threshold">Binary Threshold</option>
-          <!-- Add other dithering algorithms here later -->
-        </select>
-      </div>
-    </div>
-
-    <div id="qrcodeOptions" style="display:none;">
-      <label>Work in Progress.</label>
-      <!-- QR-Code input & options -->
-    </div>
-
-    <div id="infoOptions" style="display:none;">
-      <label>Work in Progress.</label>
-      <!-- Info about printer -->
-    </div>
-
-    <button id="printButton">Print!</button>
-
-    <button class="advanced-toggle" onclick="toggleAdvanced()">Show Advanced</button>
-    <div id="advancedSection" style="display: none; margin-top: 1em;">
-      <button onclick="disconnectPrinter()">Disconnect</button>
-      <pre id="logOutput" style="text-align: left; background: #eee; padding: 0.5em; margin-top: 1em; height: 150px; overflow: auto;"></pre>
     </div>
   </div>
 
@@ -100,4 +217,5 @@
   <script src="js/utils.js" defer></script>
   <script src="js/dithering.js" defer></script>
 </body>
+
 </html>

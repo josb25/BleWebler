@@ -10,7 +10,7 @@ const supportedPrinters = [
     dpm: 8 //printer dots per mm (203 dpi)
   },
 
-  { 
+  {
     name: "Marklife_P15",
     namePrefix: "P15_", //prefix to search for in the name while connecting via BLE
     pattern: /^P15_.+?_BLE$/, //Pattern used to distinguish this printer from others after connecting via BLE
@@ -41,10 +41,10 @@ let device = null;
 async function printLabel() {
   try {
     if (device == null) {
-        device = await navigator.bluetooth.requestDevice({
+      device = await navigator.bluetooth.requestDevice({
         filters: bluetoothFilters,
         optionalServices: optionalServices
-        });
+      });
     }
 
     // Find matching printer handler
@@ -90,36 +90,36 @@ function disconnectPrinter() {
 }
 
 function constructBitmap(canvasHeight) {
-    const fabricCanvas = getFabricCanvas();
-    if (!fabricCanvas) {
-        log("Fabric.js canvas not initialized.");
-        return null;
+  const fabricCanvas = getFabricCanvas();
+  if (!fabricCanvas) {
+    log("Fabric.js canvas not initialized.");
+    return null;
+  }
+
+  const tempCanvas = document.createElement("canvas");
+  const tempCtx = tempCanvas.getContext("2d");
+
+  const canvasWidth = fabricCanvas.width; // Use Fabric canvas width
+  tempCanvas.width = canvasWidth;
+  tempCanvas.height = canvasHeight;
+
+  // Render the fabric canvas content onto the temporary canvas
+  fabricCanvas.backgroundColor = '#ffffff'; // Ensure white background
+  fabricCanvas.renderAll(); // Re-render to ensure background is applied if needed
+  tempCtx.drawImage(fabricCanvas.getElement(), 0, 0, canvasWidth, canvasHeight);
+
+  const imgData = tempCtx.getImageData(0, 0, canvasWidth, canvasHeight).data;
+
+  const bitmap = [];
+  for (let y = 0; y < canvasHeight; y++) {
+    let row = "";
+    for (let x = 0; x < canvasWidth; x++) {
+      const i = (y * canvasWidth + x) * 4;
+      const avg = (imgData[i] + imgData[i + 1] + imgData[i + 2]) / 3;
+      row += avg < 128 ? "1" : "0";
     }
-
-    const tempCanvas = document.createElement("canvas");
-    const tempCtx = tempCanvas.getContext("2d");
-
-    const canvasWidth = fabricCanvas.width; // Use Fabric canvas width
-    tempCanvas.width = canvasWidth;
-    tempCanvas.height = canvasHeight;
-
-    // Render the fabric canvas content onto the temporary canvas
-    fabricCanvas.backgroundColor = '#ffffff'; // Ensure white background
-    fabricCanvas.renderAll(); // Re-render to ensure background is applied if needed
-    tempCtx.drawImage(fabricCanvas.getElement(), 0, 0, canvasWidth, canvasHeight);
-
-    const imgData = tempCtx.getImageData(0, 0, canvasWidth, canvasHeight).data;
-
-    const bitmap = [];
-    for (let y = 0; y < canvasHeight; y++) {
-        let row = "";
-        for (let x = 0; x < canvasWidth; x++) {
-        const i = (y * canvasWidth + x) * 4;
-        const avg = (imgData[i] + imgData[i + 1] + imgData[i + 2]) / 3;
-        row += avg < 128 ? "1" : "0";
-        }
-        bitmap.push(row);
-    }
-    return bitmap
+    bitmap.push(row);
+  }
+  return bitmap
 }
 

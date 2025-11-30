@@ -38,6 +38,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // Basic web-safe fonts
   const basicFonts = ["Arial", "Verdana", "Times New Roman", "Courier New", "Georgia", "Impact", "Tahoma", "Trebuchet MS"];
 
+  // Event listeners for toggle buttons
+  document.querySelectorAll('.toggle-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const property = button.dataset.property;
+      if (window.fabricEditor) {
+        const isActive = window.fabricEditor.toggleStyle(property);
+        button.classList.toggle('active', isActive);
+      }
+    });
+  });
+
   function populateFontDropdown(fonts) {
     fontList.innerHTML = ""; // Clear existing options
     fonts.forEach(font => {
@@ -131,6 +142,52 @@ document.addEventListener("DOMContentLoaded", () => {
   const printButton = document.getElementById("printButton");
   if (printButton) {
     printButton.addEventListener("click", printLabel);
+  }
+
+  // --- Printer Selection Modal Logic ---
+  const startupModal = document.getElementById("startupModal");
+  const printerSelect = document.getElementById("printerSelect");
+  const startBtn = document.getElementById("startBtn");
+  const paperWidthInput = document.getElementById("paperWidth");
+  const paperHeightInput = document.getElementById("paperHeight");
+
+  if (startupModal && printerSelect && startBtn) {
+    // 1. Populate Printer List
+    if (typeof supportedPrinters !== 'undefined') {
+      supportedPrinters.forEach((printer, index) => {
+        const option = document.createElement("option");
+        option.value = index; // Use index to easily retrieve printer object later
+        option.textContent = printer.name;
+        printerSelect.appendChild(option);
+      });
+    }
+
+    // 2. Show Modal (Always show on load for now as requested)
+    startupModal.classList.add("show");
+
+    // 3. Handle Start Button Click
+    startBtn.addEventListener("click", () => {
+      const selectedPrinterIndex = printerSelect.value;
+      const widthMm = parseFloat(paperWidthInput.value);
+      const heightMm = parseFloat(paperHeightInput.value);
+
+      if (typeof supportedPrinters !== 'undefined' && supportedPrinters[selectedPrinterIndex]) {
+        const printer = supportedPrinters[selectedPrinterIndex];
+        const dpm = printer.dpm;
+
+        // Calculate pixels
+        const widthPx = Math.round(widthMm * dpm);
+        const heightPx = Math.round(heightMm * dpm);
+
+        // Update Canvas
+        if (window.fabricEditor && window.fabricEditor.updateCanvasSize) {
+          window.fabricEditor.updateCanvasSize(widthPx, heightPx);
+        }
+
+        // Hide Modal
+        startupModal.classList.remove("show");
+      }
+    });
   }
 });
 
