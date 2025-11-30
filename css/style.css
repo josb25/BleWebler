@@ -46,10 +46,57 @@
   padding: var(--spacing-md);
 }
 
+/* Dark Mode Overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-body: #0f172a;
+    /* Slate 900 */
+    --bg-card: #1e293b;
+    /* Slate 800 */
+    --bg-input: #334155;
+    /* Slate 700 */
+
+    --text-main: #f8fafc;
+    /* Slate 50 */
+    --text-muted: #94a3b8;
+    /* Slate 400 */
+    --text-light: #f8fafc;
+    /* Ensure light text stays light or adapts */
+
+    --border-color: #334155;
+    /* Slate 700 */
+
+    --primary: #818cf8;
+    /* Indigo 400 - lighter for dark mode */
+    --primary-hover: #6366f1;
+    /* Indigo 500 */
+  }
+
+  /* Adjust specific elements if needed */
+  .btn-secondary {
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    border-color: var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background-color: #475569;
+    /* Slate 600 */
+  }
+}
+
 img,
 svg {
   display: block;
   max-width: 100%;
+}
+
+body {
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  margin: 0;
+  line-height: 1.5;
 }
 
 /* =========================================
