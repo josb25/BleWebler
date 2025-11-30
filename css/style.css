@@ -252,15 +252,9 @@ select:focus {
   box-shadow: var(--shadow-sm);
 }
 
-.label-type-btn i {
-  font-size: 1.1em;
-}
-
 /* Canvas Area */
 .canvas-container-wrapper {
   display: flex;
-  justify-content: center;
-  align-items: center;
   /* Vertically center the handle */
   margin-bottom: var(--spacing-lg);
   padding: var(--spacing-md);
@@ -270,6 +264,13 @@ select:focus {
   overflow-x: auto;
   /* Allow scrolling if canvas gets too big */
   overflow-y: hidden;
+}
+
+.canvas-content {
+  display: flex;
+  align-items: center;
+  margin: auto;
+  /* Safe centering: centers when small, aligns start when overflowing */
 }
 
 #fabricCanvas {
@@ -549,4 +550,15 @@ input:checked+.slider:before {
 /* Show modal when active */
 .modal.show {
   display: block;
+}
+
+/* Fixes for Modal Alignment */
+.form-group .toggle-switch {
+  display: inline-flex;
+  align-items: center;
+}
+
+#paperWidth,
+#paperHeight {
+  width: 120px;
 }
