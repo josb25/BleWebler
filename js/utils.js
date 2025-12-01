@@ -17,7 +17,9 @@ Print Tech       : Thermal (Inkless)
 Battery Cap.     : 1200mAh
 Connection       : Bluetooth 4.0 (BLE)
 Dimensions       : 74*90*35 mm
-User Manual      : <a href="https://fcc.report/FCC-ID/2A2AI-P12/5793950.pdf" target="_blank">View Manual</a>` //if link not working: Search for 2A2AI-P12 on FCC Website
+Manufacturer     : Shenzhen Yinxiaoqian Technology Co., Ltd.
+FCC-ID           : 2A2AI-P12
+User Manual      : <a href="https://fcc.report/FCC-ID/2A2AI-P12/5793950.pdf" target="_blank" rel="noopener noreferrer">View Manual</a>`
   },
 
   {
@@ -34,7 +36,9 @@ Pixel Density    : 203 dpi
 Print Width      : 12mm (96 Pixels)
 Paper Width      : 15mm
 Print Tech       : Thermal (Inkless)
-User Manual      : <a href="https://fcc.report/FCC-ID/2A2AI-P15/7600816.pdf" target="_blank">View Manual</a>`
+Manufacturer     : Shenzhen Yinxiaoqian Technology Co., Ltd.
+FCC-ID           : 2A2AI-P15
+User Manual      : <a href="https://fcc.report/FCC-ID/2A2AI-P15/7600816.pdf" target="_blank" rel="noopener noreferrer">View Manual</a>`
   },
 
   // Add more printers here
@@ -163,4 +167,3 @@ function constructBitmap(canvasHeight) {
   }
   return bitmap
 }
-

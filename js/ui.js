@@ -98,7 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
           alert("Failed to load system fonts. Please check console for details.");
         }
       } else {
-        // This else block might be redundant if the button is already hidden, but good for explicit handling
         alert("Your browser does not support the Local Font Access API.");
         loadSystemFontsBtn.style.display = 'none';
       }
@@ -109,17 +108,17 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => {
       const type = btn.dataset.type;
 
-      // Active-Klasse setzen
+      // Set active class
       buttons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
 
-      // Alle Options-Divs ausblenden
+      // Hide all option divs
       const textDiv = document.getElementById("textOptions");
       const qrDiv = document.getElementById("qrcodeOptions");
       const infoDiv = document.getElementById("infoOptions");
 
       if (!textDiv || !qrDiv || !infoDiv) {
-        console.error("Options-Divs nicht gefunden!");
+        console.error("Option divs not found!");
         return;
       }
 
@@ -127,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
       qrDiv.style.display = "none";
       infoDiv.style.display = "none";
 
-      // Gewählte Option einblenden
+      // Show selected option
       if (type === "text") textDiv.style.display = "block";
       else if (type === "qrcode") qrDiv.style.display = "block";
       else if (type === "info") {
@@ -165,9 +164,9 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshInfoBtn.addEventListener("click", handleInfoTab);
   }
 
-  // Initialen Zustand setzen
+  // Set initial state
   const activeBtn = document.querySelector(".label-type-btn.active");
-  if (activeBtn) activeBtn.click(); // löst Anzeige der Text-Optionen aus
+  if (activeBtn) activeBtn.click(); // Triggers display of text options
 
   // Add event listener for the print button
   const printButton = document.getElementById("printButton");
@@ -198,12 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
       startX = clientX;
       resizeHandle.classList.add('active');
       if (window.fabricEditor && window.fabricEditor.getActiveObject) {
-        // We need the current canvas width. 
-        // Since we don't have direct access to canvas object here easily without getter,
-        // let's assume we can get it from the DOM element or expose a getter.
-        // Actually, fabricEditor.updateCanvasSize updates it.
-        // Let's use the canvas element's width for now or get it from fabric instance if possible.
-        // window.getFabricCanvas() is available.
+        // Get current canvas width
         const canvas = window.getFabricCanvas();
         if (canvas) {
           startWidth = canvas.getWidth();

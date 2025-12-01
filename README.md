@@ -1,29 +1,63 @@
 # BleWebler
-BleWebler is a lightweight, browser-based label printing tool that connects to Bluetooth Low Energy (BLE) thermal printers – no drivers, no apps, no vendor lock-in. It runs entirely in Chromium-based browsers and communicates directly with supported devices using the Web Bluetooth API.
 
-Try it: https://josb25.github.io/BleWebler/
+**BleWebler** is a browser-based solution for thermal label printing. It leverages the **Web Bluetooth API** to connect directly to supported Bluetooth Low Energy (BLE) printers, eliminating the need for drivers, proprietary apps, or vendor lock-in.
 
-Features
-  - Bluetooth LE connection via Web Bluetooth API
-  - Direct printing to compatible label printers
-  - Runs entirely in the browser: No installation required
-  - Modular structure: Ready to support more printer models
-  - Open source and privacy-friendly: Nothing is sent to any server
+# [**Try it here!**](https://josb25.github.io/BleWebler/)
 
-Use Cases
-  - Creating labels on mobile or desktop without proprietary apps
-  - Replacing stock label printer apps with a cleaner, open alternative
+---
 
-Requirements
-  - A Chromium-based browser (e.g. Chrome, Edge)
-  - A supported BLE-compatible label printer
-  - A user-initiated connection (via button click, due to Web Bluetooth restrictions)
+## Key Features
 
-Future Plans
-  - Support for more printer models and brands
-  - Label preview
-  - Ability to import bitmaps
-  - Print QR- and Barcodes
+### Privacy-First & Open Source
+BleWebler runs entirely within your browser. **No data is ever sent to a server.** Your designs and labels stay on your device, ensuring complete privacy and security.
+
+### Zero Installation
+- **No Drivers**: Connects directly to hardware via Web Bluetooth.
+- **No Apps**: Works on any modern operating system (Windows, macOS, Linux, Android, ChromeOS) with a compatible browser.
+- **Instant Start**: Just open the URL and start printing.
+
+### Image Processing
+Thermal printers require specific image preparation. BleWebler includes industry standard dithering algorithms to ensure your images look crisp and clear on 1-bit printers:
+- **Floyd-Steinberg**
+- **Atkinson**
+- **Bayer**
+- **Binary Threshold**
+
+### Flexible Media Support
+- **Infinite Paper**: Support for continuous label rolls with variable lengths.
+- **Fixed Sizes**: Presets for standard label sizes.
+- **Auto-Scaling**: Canvas automatically adjusts to the printer's resolution (DPI).
+
+---
+
+## Supported Hardware
+
+BleWebler currently supports the following Marklife printers:
+- Marklife P12
+- Marklife P15
+
+*More models can and will be added via the modular printer driver architecture.*
+
+---
+
+## Requirements
+
+- **Browser**: A Chromium-based browser (Chrome, Edge, ...) with Web Bluetooth Support.
+- **Hardware**: A computer or mobile device with Bluetooth 4.0+ support.
+
+---
+
+## License
+
+Licensed under the **GPLv3 License**. You are free to use, modify, and distribute this software in accordance with the license terms.
 
 
-Licensed under the GPLv3 License.
+## Credits / Third Party Libraries
+
+This project makes use of open source libraries:
+
+### Fabric.js
+* **Website:** [http://fabricjs.com/](http://fabricjs.com/)
+* **Version:** 5.3.0
+* **Copyright:** © 2008-2015 Juriy Zaytsev & Kangax
+* **License:** [MIT License](https://github.com/fabricjs/fabric.js/blob/master/LICENSE)
