@@ -105,7 +105,7 @@ class MarklifeP12Printer extends PrinterBase {
 
       for (const packet of packets) {
         await writeChar.writeValue(new Uint8Array(packet));
-        await new Promise(r => setTimeout(r, 0)); // Wait 0ms between packets
+        await new Promise(r => setTimeout(r, 20)); // Wait 20ms between packets
       }
 
       await notifyChar.stopNotifications();
