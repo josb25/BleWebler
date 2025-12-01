@@ -6,7 +6,8 @@ let ditheringAlgorithmSelect; // New reference
 document.addEventListener("DOMContentLoaded", () => {
   canvas = new fabric.Canvas('fabricCanvas', {
     enableRetinaScaling: true,
-    objectCaching: false
+    objectCaching: false,
+    allowTouchScrolling: true
   });
   canvas.setHeight(96); // Printer height
   canvas.setWidth(320); // Max width for a label

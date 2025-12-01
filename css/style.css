@@ -391,6 +391,22 @@ select:focus {
 
 /* Responsive */
 @media (max-width: 480px) {
+  .container {
+    padding: var(--spacing-xs);
+  }
+
+  header {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .card {
+    padding: var(--spacing-md);
+  }
+
+  .label-type-selector {
+    margin-bottom: var(--spacing-md);
+  }
+
   .control-group {
     flex-wrap: wrap;
   }
