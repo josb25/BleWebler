@@ -50,7 +50,16 @@ class PrinterBase {
     }
 
     async getPrinterInfo() {
-        console.log("Printer info not implemented.");
-        return ("Printer info not implemented.");
+        if (!this.device) {
+            return "No printer connected.";
+        }
+
+        const printer = supportedPrinters.find(p => p.pattern.test(this.device.name));
+
+        if (printer) {
+            return printer.printerInfo;
+        } else {
+            return "Unknown printer model.";
+        }
     }
 }

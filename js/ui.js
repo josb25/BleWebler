@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (printer) {
           infoDisplay.textContent = "Retrieving information...";
           const info = await printer.getPrinterInfo();
-          infoDisplay.textContent = info;
+          infoDisplay.innerHTML = info;
         } else {
           infoDisplay.textContent = "Could not connect to printer.";
         }

@@ -144,7 +144,7 @@ class MarklifeP12Printer extends PrinterBase {
           return `${f.label.padEnd(padLen)} : ${value}`;
         });
 
-      return lines.join('\n');
+      return "General Printer Info: " + "\n" + await super.getPrinterInfo() + "\n\n" + "Info pulled directly from your printer: " + "\n" + lines.join('\n');
 
     } catch (error) {
       console.error("Error getting printer info:", error);

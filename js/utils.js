@@ -7,7 +7,17 @@ const supportedPrinters = [
     printerClass: MarklifeP12Printer, // Class to instantiate
     optionalServices: ["0000ff00-0000-1000-8000-00805f9b34fb", "49535343-fe7d-4ae5-8fa9-9fafd205e455"], // UUIDs needed
     px: 96, //printed width in px
-    dpm: 8 //printer dots per mm (203 dpi)
+    dpm: 8, //printer dots per mm (203 dpi)
+    printerInfo:
+      `Name             : Marklife P12
+Pixel Density    : 203 dpi
+Print Width      : 12mm (96 Pixels)
+Paper Width      : 15mm
+Print Tech       : Thermal (Inkless)
+Battery Cap.     : 1200mAh
+Connection       : Bluetooth 4.0 (BLE)
+Dimensions       : 74*90*35 mm
+User Manual      : <a href="https://fcc.report/FCC-ID/2A2AI-P12/5793950.pdf" target="_blank">View Manual</a>` //if link not working: Search for 2A2AI-P12 on FCC Website
   },
 
   {
@@ -17,7 +27,14 @@ const supportedPrinters = [
     printerClass: MarklifeP12Printer, // Class to instantiate
     optionalServices: ["0000ff00-0000-1000-8000-00805f9b34fb", "49535343-fe7d-4ae5-8fa9-9fafd205e455"], // UUIDs needed
     px: 96, //printed width in px
-    dpm: 8 //printer dots per mm (203 dpi)
+    dpm: 8, //printer dots per mm (203 dpi)
+    printerInfo:
+      `Name             : Marklife P15
+Pixel Density    : 203 dpi
+Print Width      : 12mm (96 Pixels)
+Paper Width      : 15mm
+Print Tech       : Thermal (Inkless)
+User Manual      : <a href="https://fcc.report/FCC-ID/2A2AI-P15/7600816.pdf" target="_blank">View Manual</a>`
   },
 
   // Add more printers here
