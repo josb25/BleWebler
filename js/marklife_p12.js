@@ -120,7 +120,7 @@ class MarklifeP12Printer extends PrinterBase {
       // Helper: specific BCD logic for Battery
       const parseBattery = (buf) => {
         if (!buf || buf.length < 2) return 'Unknown';
-        const val = (buf[1] >> 4) * 10 + (buf[1] & 0x0F);
+        const val = buf[1];
         return `${val} %`;
       };
 
