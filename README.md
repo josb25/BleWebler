@@ -35,6 +35,7 @@ Thermal printers require specific image preparation. BleWebler includes industry
 BleWebler currently supports the following Marklife printers:
 - Marklife P12
 - Marklife P15
+- L13 (SilverCrest and others)
 
 *More models can and will be added via the modular printer driver architecture.*
 
