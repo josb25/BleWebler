@@ -371,7 +371,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Function to apply settings
-    const applyPrinterSettings = (printerIndex, widthMm, heightMm, isInfinite) => {
+    const applyPrinterSettings = (printerIndex, widthMm, heightMm, isInfinite, paddingTopMm = 0, paddingBottomMm = 0, paddingLeftMm = 0, paddingRightMm = 0) => {
       if (typeof supportedPrinters !== 'undefined' && supportedPrinters[printerIndex]) {
         const printer = supportedPrinters[printerIndex];
         const dpm = printer.dpm;
@@ -403,10 +403,25 @@ document.addEventListener("DOMContentLoaded", () => {
           setTimeout(updateDimensionInputs, 0);
         }
 
+        // Apply padding (convert mm to pixels)
+        if (window.fabricEditor && window.fabricEditor.setPadding) {
+          const paddingTopPx = Math.round(paddingTopMm * dpm);
+          const paddingBottomPx = Math.round(paddingBottomMm * dpm);
+          const paddingLeftPx = Math.round(paddingLeftMm * dpm);
+          const paddingRightPx = Math.round(paddingRightMm * dpm);
+          window.fabricEditor.setPadding(paddingTopPx, paddingBottomPx, paddingLeftPx, paddingRightPx);
+        }
+
         // Hide Modal
         startupModal.classList.remove("show");
       }
     };
+
+    // Get padding inputs
+    const paddingTopInput = document.getElementById('paddingTop');
+    const paddingBottomInput = document.getElementById('paddingBottom');
+    const paddingLeftInput = document.getElementById('paddingLeft');
+    const paddingRightInput = document.getElementById('paddingRight');
 
     // Check for URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -414,6 +429,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlWidth = urlParams.get('width');
     const urlHeight = urlParams.get('height');
     const urlInfinite = urlParams.get('infinite') === 'true';
+    const urlPaddingTop = urlParams.get('paddingTop');
+    const urlPaddingBottom = urlParams.get('paddingBottom');
+    const urlPaddingLeft = urlParams.get('paddingLeft');
+    const urlPaddingRight = urlParams.get('paddingRight');
 
     if (urlPrinter !== null && urlWidth !== null && urlHeight !== null) {
       // Apply settings from URL
@@ -431,8 +450,19 @@ document.addEventListener("DOMContentLoaded", () => {
           // Trigger change event to update UI state (hide/show width input)
           infinitePaperCheckbox.dispatchEvent(new Event('change'));
         }
+        
+        // Update padding inputs from URL
+        const pTop = urlPaddingTop !== null ? parseFloat(urlPaddingTop) : 0;
+        const pBottom = urlPaddingBottom !== null ? parseFloat(urlPaddingBottom) : 0;
+        const pLeft = urlPaddingLeft !== null ? parseFloat(urlPaddingLeft) : 0;
+        const pRight = urlPaddingRight !== null ? parseFloat(urlPaddingRight) : 0;
+        
+        if (paddingTopInput) paddingTopInput.value = pTop;
+        if (paddingBottomInput) paddingBottomInput.value = pBottom;
+        if (paddingLeftInput) paddingLeftInput.value = pLeft;
+        if (paddingRightInput) paddingRightInput.value = pRight;
 
-        applyPrinterSettings(pIndex, w, h, urlInfinite);
+        applyPrinterSettings(pIndex, w, h, urlInfinite, pTop, pBottom, pLeft, pRight);
       } else {
         // Invalid params, show modal
         startupModal.classList.add("show");
@@ -492,14 +522,64 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+    // Function to update padding from inputs
+    const updatePaddingFromInputs = () => {
+      if (!window.fabricEditor || !window.fabricEditor.setPadding) return;
+      
+      const dpm = getCurrentPrinterDpm();
+      const paddingTopMm = paddingTopInput ? parseFloat(paddingTopInput.value) || 0 : 0;
+      const paddingBottomMm = paddingBottomInput ? parseFloat(paddingBottomInput.value) || 0 : 0;
+      const paddingLeftMm = paddingLeftInput ? parseFloat(paddingLeftInput.value) || 0 : 0;
+      const paddingRightMm = paddingRightInput ? parseFloat(paddingRightInput.value) || 0 : 0;
+      
+      // Convert mm to pixels
+      const paddingTopPx = Math.round(paddingTopMm * dpm);
+      const paddingBottomPx = Math.round(paddingBottomMm * dpm);
+      const paddingLeftPx = Math.round(paddingLeftMm * dpm);
+      const paddingRightPx = Math.round(paddingRightMm * dpm);
+      
+      window.fabricEditor.setPadding(paddingTopPx, paddingBottomPx, paddingLeftPx, paddingRightPx);
+      
+      // Update URL
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.set('paddingTop', paddingTopMm);
+      newUrl.searchParams.set('paddingBottom', paddingBottomMm);
+      newUrl.searchParams.set('paddingLeft', paddingLeftMm);
+      newUrl.searchParams.set('paddingRight', paddingRightMm);
+      window.history.replaceState({}, '', newUrl);
+    };
+
+    // Add event listeners to padding inputs for real-time updates
+    if (paddingTopInput) {
+      paddingTopInput.addEventListener('change', updatePaddingFromInputs);
+      paddingTopInput.addEventListener('blur', updatePaddingFromInputs);
+    }
+    if (paddingBottomInput) {
+      paddingBottomInput.addEventListener('change', updatePaddingFromInputs);
+      paddingBottomInput.addEventListener('blur', updatePaddingFromInputs);
+    }
+    if (paddingLeftInput) {
+      paddingLeftInput.addEventListener('change', updatePaddingFromInputs);
+      paddingLeftInput.addEventListener('blur', updatePaddingFromInputs);
+    }
+    if (paddingRightInput) {
+      paddingRightInput.addEventListener('change', updatePaddingFromInputs);
+      paddingRightInput.addEventListener('blur', updatePaddingFromInputs);
+    }
+
     // 3. Handle Start Button Click
     startBtn.addEventListener("click", () => {
       const selectedPrinterIndex = printerSelect.value;
       const widthMm = parseFloat(paperWidthInput.value);
       const heightMm = parseFloat(paperHeightInput.value);
       const isInfinite = infinitePaperCheckbox ? infinitePaperCheckbox.checked : false;
+      const paddingTopMm = paddingTopInput ? parseFloat(paddingTopInput.value) || 0 : 0;
+      const paddingBottomMm = paddingBottomInput ? parseFloat(paddingBottomInput.value) || 0 : 0;
+      const paddingLeftMm = paddingLeftInput ? parseFloat(paddingLeftInput.value) || 0 : 0;
+      const paddingRightMm = paddingRightInput ? parseFloat(paddingRightInput.value) || 0 : 0;
 
-      applyPrinterSettings(selectedPrinterIndex, widthMm, heightMm, isInfinite);
+      applyPrinterSettings(selectedPrinterIndex, widthMm, heightMm, isInfinite, 
+        paddingTopMm, paddingBottomMm, paddingLeftMm, paddingRightMm);
 
       // Update URL
       const newUrl = new URL(window.location);
@@ -507,6 +587,10 @@ document.addEventListener("DOMContentLoaded", () => {
       newUrl.searchParams.set('width', widthMm);
       newUrl.searchParams.set('height', heightMm);
       newUrl.searchParams.set('infinite', isInfinite);
+      newUrl.searchParams.set('paddingTop', paddingTopMm);
+      newUrl.searchParams.set('paddingBottom', paddingBottomMm);
+      newUrl.searchParams.set('paddingLeft', paddingLeftMm);
+      newUrl.searchParams.set('paddingRight', paddingRightMm);
       window.history.replaceState({}, '', newUrl);
     });
   }

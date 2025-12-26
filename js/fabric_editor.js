@@ -3,6 +3,22 @@ let fontSizeInput;
 let fontFamilyInput;
 let ditheringAlgorithmSelect; // New reference
 
+// Padding state (in pixels)
+let paddingState = {
+  top: 0,
+  bottom: 0,
+  left: 0,
+  right: 0
+};
+
+// Padding guide rectangles (for visual display)
+let paddingGuides = {
+  top: null,
+  bottom: null,
+  left: null,
+  right: null
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   canvas = new fabric.Canvas('fabricCanvas', {
     enableRetinaScaling: true,
@@ -29,6 +45,96 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   canvas.on('selection:created', updateTextControls);
   canvas.on('object:modified', handleObjectModified); // Update controls when object is modified (e.g., scaled)
+  
+  // Constrain object scaling to stay within padding bounds
+  canvas.on('object:scaling', (e) => {
+    const obj = e.target;
+    const bounds = getPaddingBounds();
+    
+    // Get object dimensions after scaling
+    const objWidth = obj.getScaledWidth();
+    const objHeight = obj.getScaledHeight();
+    
+    // Constrain position if object would go outside bounds
+    let newLeft = obj.left;
+    let newTop = obj.top;
+    
+    // Left constraint
+    if (newLeft < bounds.left) {
+      newLeft = bounds.left;
+    }
+    // Right constraint
+    if (newLeft + objWidth > bounds.right) {
+      newLeft = bounds.right - objWidth;
+    }
+    // Top constraint
+    if (newTop < bounds.top) {
+      newTop = bounds.top;
+    }
+    // Bottom constraint
+    if (newTop + objHeight > bounds.bottom) {
+      newTop = bounds.bottom - objHeight;
+    }
+    
+    // If position needs adjustment, adjust scale instead to keep object within bounds
+    if (newLeft !== obj.left || newTop !== obj.top) {
+      // Calculate maximum allowed dimensions
+      const maxWidth = bounds.right - bounds.left;
+      const maxHeight = bounds.bottom - bounds.top;
+      
+      // Limit scale to fit within bounds
+      const scaleX = obj.scaleX;
+      const scaleY = obj.scaleY;
+      const baseWidth = obj.width;
+      const baseHeight = obj.height;
+      
+      const newScaleX = Math.min(scaleX, maxWidth / baseWidth);
+      const newScaleY = Math.min(scaleY, maxHeight / baseHeight);
+      
+      obj.set({
+        scaleX: newScaleX,
+        scaleY: newScaleY,
+        left: Math.max(bounds.left, Math.min(newLeft, bounds.right - obj.getScaledWidth())),
+        top: Math.max(bounds.top, Math.min(newTop, bounds.bottom - obj.getScaledHeight()))
+      });
+    }
+  });
+  
+  // Constrain object movement to stay within padding bounds
+  canvas.on('object:moving', (e) => {
+    const obj = e.target;
+    const bounds = getPaddingBounds();
+    
+    // Get object dimensions
+    const objWidth = obj.getScaledWidth();
+    const objHeight = obj.getScaledHeight();
+    
+    // Constrain position
+    let newLeft = obj.left;
+    let newTop = obj.top;
+    
+    // Left constraint
+    if (newLeft < bounds.left) {
+      newLeft = bounds.left;
+    }
+    // Right constraint
+    if (newLeft + objWidth > bounds.right) {
+      newLeft = bounds.right - objWidth;
+    }
+    // Top constraint
+    if (newTop < bounds.top) {
+      newTop = bounds.top;
+    }
+    // Bottom constraint
+    if (newTop + objHeight > bounds.bottom) {
+      newTop = bounds.bottom - objHeight;
+    }
+    
+    obj.set({
+      left: newLeft,
+      top: newTop
+    });
+  });
 
   // Event listeners for styling controls
   // fontSizeInput.addEventListener('change', applyTextProperties); // Handled in ui.js
@@ -76,11 +182,14 @@ document.addEventListener("DOMContentLoaded", () => {
               img.originalWidth = tempImage.width; // Store original width
               img.originalHeight = tempImage.height; // Store original height
 
+              const bounds = getPaddingBounds();
+              const contentHeight = bounds.bottom - bounds.top;
+              
               img.set({
                 scaleX: 1, // Image data is already scaled, so set base scale to 1
                 scaleY: 1, // Image data is already scaled, so set base scale to 1
-                left: 0, // Align to left
-                top: (canvasHeight - img.height) / 2, // Vertically center
+                left: bounds.left, // Align to left padding boundary
+                top: bounds.top + (contentHeight - img.height) / 2, // Vertically center within padding bounds
                 isUploadedImage: true
               }); canvas.add(img);
               canvas.setActiveObject(img);
@@ -158,8 +267,12 @@ function reDitherImageOnScale(fabricImageObject) {
 function addTextToCanvas() {
   const textContent = 'Type here';
 
+  const bounds = getPaddingBounds();
+  const contentWidth = bounds.right - bounds.left;
+  const contentHeight = bounds.bottom - bounds.top;
+
   const newText = new fabric.IText(textContent, {
-    left: 0,
+    left: bounds.left,
     fontFamily: fontFamilyInput.value || 'Arial', // Use fontFamilySelect
     fontSize: parseFloat(fontSizeInput.value) || 48,
     fill: '#000000',
@@ -169,10 +282,9 @@ function addTextToCanvas() {
     textBaseline: 'alphabetic', // Explicitly set a valid textBaseline
   });
 
-  // Center vertically
-  const canvasHeight = canvas.getHeight();
+  // Center vertically within padding bounds
   newText.set({
-    top: (canvasHeight - newText.getScaledHeight()) / 2
+    top: bounds.top + (contentHeight - newText.getScaledHeight()) / 2
   });
   canvas.add(newText);
   canvas.setActiveObject(newText);
@@ -250,23 +362,27 @@ function addQRCodeToCanvas() {
 
     // Add QR code image to canvas
     fabric.Image.fromURL(imageSrc, function (img) {
-      const canvasWidth = canvas.getWidth();
-      const canvasHeight = canvas.getHeight();
+      const bounds = getPaddingBounds();
+      const contentWidth = bounds.right - bounds.left;
+      const contentHeight = bounds.bottom - bounds.top;
       
-      // Scale QR code to fit within the label (max 80% of canvas width and height)
-      const maxWidth = canvasWidth * 0.8;
-      const maxHeight = canvasHeight * 0.8;
+      // Scale QR code to fit within the padding bounds (max 80% of content area)
+      const maxWidth = contentWidth * 0.8;
+      const maxHeight = contentHeight * 0.8;
       
       // Calculate scale based on both width and height constraints
       const scaleX = maxWidth / img.width;
       const scaleY = maxHeight / img.height;
       const scale = Math.min(scaleX, scaleY, 1); // Use the smaller scale to fit both dimensions
       
+      const scaledWidth = img.width * scale;
+      const scaledHeight = img.height * scale;
+      
       img.set({
         scaleX: scale,
         scaleY: scale,
-        left: (canvasWidth - img.width * scale) / 2, // Center horizontally
-        top: (canvasHeight - img.height * scale) / 2, // Center vertically
+        left: bounds.left + (contentWidth - scaledWidth) / 2, // Center horizontally within padding bounds
+        top: bounds.top + (contentHeight - scaledHeight) / 2, // Center vertically within padding bounds
         isQRCode: true,
         qrContent: qrContent // Store the content for potential re-editing
       });
@@ -426,7 +542,8 @@ window.fabricEditor = {
     const activeObject = canvas.getActiveObject();
     if (!activeObject) return;
 
-    const canvasWidth = canvas.getWidth();
+    const bounds = getPaddingBounds();
+    const contentWidth = bounds.right - bounds.left;
     let objectWidth;
     let newLeft;
 
@@ -440,16 +557,16 @@ window.fabricEditor = {
       return; // Not a text or image object, do nothing
     }
 
-    // Adjust the object's left position to align it within the canvas
+    // Adjust the object's left position to align it within the padding bounds
     switch (alignment) {
       case 'left':
-        newLeft = 0; // Align to left edge of canvas
+        newLeft = bounds.left; // Align to left padding boundary
         break;
       case 'center':
-        newLeft = (canvasWidth - objectWidth) / 2; // Center horizontally
+        newLeft = bounds.left + (contentWidth - objectWidth) / 2; // Center within padding bounds
         break;
       case 'right':
-        newLeft = canvasWidth - objectWidth; // Align to right edge of canvas
+        newLeft = bounds.right - objectWidth; // Align to right padding boundary
         break;
       default:
         return;
@@ -462,7 +579,8 @@ window.fabricEditor = {
     const activeObject = canvas.getActiveObject();
     if (!activeObject) return;
 
-    const canvasHeight = canvas.getHeight();
+    const bounds = getPaddingBounds();
+    const contentHeight = bounds.bottom - bounds.top;
     let objectHeight;
     let newTop;
 
@@ -476,13 +594,13 @@ window.fabricEditor = {
 
     switch (alignment) {
       case 'top':
-        newTop = 0; // Align to top of canvas
+        newTop = bounds.top; // Align to top padding boundary
         break;
       case 'middle':
-        newTop = (canvasHeight - objectHeight) / 2; // Center vertically
+        newTop = bounds.top + (contentHeight - objectHeight) / 2; // Center within padding bounds
         break;
       case 'bottom':
-        newTop = canvasHeight - objectHeight; // Align to bottom of canvas
+        newTop = bounds.bottom - objectHeight; // Align to bottom padding boundary
         break;
       default:
         return;
@@ -542,7 +660,116 @@ window.fabricEditor = {
     if (canvas) {
       canvas.setWidth(width);
       canvas.setHeight(height);
+      updatePaddingGuides();
       canvas.renderAll();
     }
+  },
+  
+  setPadding: function (top, bottom, left, right) {
+    paddingState.top = top;
+    paddingState.bottom = bottom;
+    paddingState.left = left;
+    paddingState.right = right;
+    updatePaddingGuides();
+    canvas.renderAll();
+  },
+  
+  getPaddingBounds: function () {
+    return getPaddingBounds();
   }
 };
+
+// Helper function to get padding bounds in pixels
+function getPaddingBounds() {
+  const canvasWidth = canvas.getWidth();
+  const canvasHeight = canvas.getHeight();
+  
+  return {
+    left: paddingState.left,
+    top: paddingState.top,
+    right: canvasWidth - paddingState.right,
+    bottom: canvasHeight - paddingState.bottom
+  };
+}
+
+// Update visual padding guides on canvas
+function updatePaddingGuides() {
+  const canvasWidth = canvas.getWidth();
+  const canvasHeight = canvas.getHeight();
+  
+  // Remove existing guides
+  Object.values(paddingGuides).forEach(guide => {
+    if (guide) {
+      canvas.remove(guide);
+    }
+  });
+  
+  // Only show guides if padding is set
+  if (paddingState.top === 0 && paddingState.bottom === 0 && 
+      paddingState.left === 0 && paddingState.right === 0) {
+    return;
+  }
+  
+  // Create guide rectangles (semi-transparent overlays)
+  const guideOptions = {
+    fill: 'rgba(255, 0, 0, 0.1)',
+    stroke: 'rgba(255, 0, 0, 0.3)',
+    strokeWidth: 1,
+    selectable: false,
+    evented: false,
+    excludeFromExport: true,
+    paddingGuide: true
+  };
+  
+  // Top padding guide
+  if (paddingState.top > 0) {
+    paddingGuides.top = new fabric.Rect({
+      left: 0,
+      top: 0,
+      width: canvasWidth,
+      height: paddingState.top,
+      ...guideOptions
+    });
+    canvas.add(paddingGuides.top);
+    canvas.sendToBack(paddingGuides.top);
+  }
+  
+  // Bottom padding guide
+  if (paddingState.bottom > 0) {
+    paddingGuides.bottom = new fabric.Rect({
+      left: 0,
+      top: canvasHeight - paddingState.bottom,
+      width: canvasWidth,
+      height: paddingState.bottom,
+      ...guideOptions
+    });
+    canvas.add(paddingGuides.bottom);
+    canvas.sendToBack(paddingGuides.bottom);
+  }
+  
+  // Left padding guide
+  if (paddingState.left > 0) {
+    paddingGuides.left = new fabric.Rect({
+      left: 0,
+      top: paddingState.top,
+      width: paddingState.left,
+      height: canvasHeight - paddingState.top - paddingState.bottom,
+      ...guideOptions
+    });
+    canvas.add(paddingGuides.left);
+    canvas.sendToBack(paddingGuides.left);
+  }
+  
+  // Right padding guide
+  if (paddingState.right > 0) {
+    paddingGuides.right = new fabric.Rect({
+      left: canvasWidth - paddingState.right,
+      top: paddingState.top,
+      width: paddingState.right,
+      height: canvasHeight - paddingState.top - paddingState.bottom,
+      ...guideOptions
+    });
+    canvas.add(paddingGuides.right);
+    canvas.sendToBack(paddingGuides.right);
+  }
+}
