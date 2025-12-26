@@ -32,7 +32,13 @@ document.addEventListener("DOMContentLoaded", () => {
   fontSizeInput = document.getElementById('fontSize');
   fontFamilyInput = document.getElementById('fontFamilyInput');
   ditheringAlgorithmSelect = document.getElementById('ditheringAlgorithmSelect'); // Initialize new reference
-
+  
+  // QR Code content input event listener
+  const qrContentInput = document.getElementById('qrContentInput');
+  if (qrContentInput) {
+    qrContentInput.addEventListener('change', updateQRCodeFromInput);
+    qrContentInput.addEventListener('blur', updateQRCodeFromInput);
+  }
 
   // Event listener for object selection to update UI controls
   canvas.on('selection:cleared', (e) => {
@@ -399,6 +405,102 @@ function addQRCodeToCanvas() {
   }, 100);
 }
 
+// Function to update QR code content while maintaining position and size
+function updateQRCodeFromInput() {
+  const activeObject = canvas.getActiveObject();
+  if (!activeObject || !activeObject.isQRCode) return;
+  
+  const qrContentInput = document.getElementById('qrContentInput');
+  if (!qrContentInput) return;
+  
+  const newContent = qrContentInput.value.trim();
+  if (!newContent || newContent === activeObject.qrContent) return;
+  
+  // Check if QRCode library is loaded
+  if (typeof QRCode === 'undefined') {
+    alert("QR code library failed to load. Please refresh the page.");
+    return;
+  }
+  
+  // Store current position and size
+  const currentLeft = activeObject.left;
+  const currentTop = activeObject.top;
+  const currentScaleX = activeObject.scaleX;
+  const currentScaleY = activeObject.scaleY;
+  const currentAngle = activeObject.angle || 0;
+  
+  // Create a temporary container for QR code generation
+  const tempDiv = document.createElement('div');
+  tempDiv.style.position = 'absolute';
+  tempDiv.style.left = '-9999px';
+  tempDiv.style.width = '200px';
+  tempDiv.style.height = '200px';
+  document.body.appendChild(tempDiv);
+  
+  // Generate new QR code
+  const qrcode = new QRCode(tempDiv, {
+    text: newContent,
+    width: 200,
+    height: 200,
+    colorDark: '#000000',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  
+  // Wait for QR code to render
+  setTimeout(() => {
+    const qrImg = tempDiv.querySelector('img');
+    const qrCanvas = tempDiv.querySelector('canvas');
+    
+    let imageSrc;
+    if (qrImg && qrImg.src) {
+      imageSrc = qrImg.src;
+    } else if (qrCanvas) {
+      imageSrc = qrCanvas.toDataURL('image/png');
+    } else {
+      const qrSvg = tempDiv.querySelector('svg');
+      if (qrSvg) {
+        const svgData = new XMLSerializer().serializeToString(qrSvg);
+        imageSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+      } else {
+        alert("Failed to generate QR code image.");
+        document.body.removeChild(tempDiv);
+        return;
+      }
+    }
+    
+    // Replace the QR code image while maintaining position and size
+    fabric.Image.fromURL(imageSrc, function (newImg) {
+      // Calculate the scale to match the original size
+      const originalScaledWidth = activeObject.getScaledWidth();
+      const originalScaledHeight = activeObject.getScaledHeight();
+      const newScaleX = originalScaledWidth / newImg.width;
+      const newScaleY = originalScaledHeight / newImg.height;
+      
+      newImg.set({
+        scaleX: newScaleX,
+        scaleY: newScaleY,
+        left: currentLeft,
+        top: currentTop,
+        angle: currentAngle,
+        isQRCode: true,
+        qrContent: newContent
+      });
+      
+      // Replace the old QR code with the new one
+      canvas.remove(activeObject);
+      canvas.add(newImg);
+      canvas.setActiveObject(newImg);
+      canvas.renderAll();
+      
+      // Clean up temporary div
+      document.body.removeChild(tempDiv);
+    }, {
+      crossOrigin: 'anonymous'
+    });
+  }, 100);
+}
+
 function applyTextProperties() {
   const activeObject = canvas.getActiveObject();
   if (activeObject && activeObject.type === 'i-text') {
@@ -423,6 +525,7 @@ function updateTextControls() {
   const textFormatGroup = document.getElementById('text-format-group');
   const alignmentGroup = document.getElementById('alignment-group');
   const imageControlsGroup = document.getElementById('image-controls-group');
+  const qrControlsGroup = document.getElementById('qr-controls-group');
   const objectSpecificControlsBox = document.getElementById('object-specific-controls');
 
   // Groups that are object-specific styling controls
@@ -434,6 +537,7 @@ function updateTextControls() {
     if (group) group.style.display = 'none';
   });
   if (imageStylingGroup) imageStylingGroup.style.display = 'none';
+  if (qrControlsGroup) qrControlsGroup.style.display = 'none';
 
   // The general controls (text input, alignment) are always visible based on the HTML structure.
 
@@ -459,20 +563,42 @@ function updateTextControls() {
         button.classList.toggle('active', isActive);
       });
     } else if (activeObject.type === 'image') {
-      // Show image styling group
-      if (imageStylingGroup) imageStylingGroup.style.display = 'flex';
+      // Check if it's a QR code
+      if (activeObject.isQRCode) {
+        // Show QR controls ONLY when QR code is selected
+        if (qrControlsGroup) {
+          qrControlsGroup.style.display = 'flex';
+          const qrContentInput = document.getElementById('qrContentInput');
+          if (qrContentInput) {
+            qrContentInput.value = activeObject.qrContent || '';
+          }
+        }
+        // Make sure image controls are hidden
+        if (imageStylingGroup) imageStylingGroup.style.display = 'none';
+      } else {
+        // Show image styling group for regular images
+        if (imageStylingGroup) imageStylingGroup.style.display = 'flex';
+        // Make sure QR controls are hidden
+        if (qrControlsGroup) qrControlsGroup.style.display = 'none';
 
-      if (ditheringAlgorithmSelect) {
-        if (activeObject.ditheringAlgorithm) {
-          ditheringAlgorithmSelect.value = activeObject.ditheringAlgorithm;
-        } else {
-          ditheringAlgorithmSelect.value = 'none';
+        if (ditheringAlgorithmSelect) {
+          if (activeObject.ditheringAlgorithm) {
+            ditheringAlgorithmSelect.value = activeObject.ditheringAlgorithm;
+          } else {
+            ditheringAlgorithmSelect.value = 'none';
+          }
         }
       }
+    } else {
+      // Not text or image, hide all controls
+      if (qrControlsGroup) qrControlsGroup.style.display = 'none';
+      if (imageStylingGroup) imageStylingGroup.style.display = 'none';
     }
   } else {
-    // No object selected, hide the object-specific box
+    // No object selected, hide the object-specific box and all controls
     if (objectSpecificControlsBox) objectSpecificControlsBox.style.display = 'none';
+    if (qrControlsGroup) qrControlsGroup.style.display = 'none';
+    if (imageStylingGroup) imageStylingGroup.style.display = 'none';
 
     // Ensure controls are reset
     clearTextControls();
