@@ -110,8 +110,35 @@ body {
 }
 
 header {
-  text-align: center;
   margin-bottom: var(--spacing-xl);
+  padding: 0 var(--spacing-lg);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.header-left {
+  flex: 0 0 auto;
+  width: 100px; /* Match button width to center title */
+}
+
+.header-center {
+  flex: 1;
+  text-align: center;
+  min-width: 0; /* Allow shrinking */
+}
+
+.header-right {
+  flex: 0 0 auto;
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  width: 100px; /* Match left side for centering */
+  justify-content: flex-end;
 }
 
 h1 {
@@ -255,8 +282,7 @@ select:focus {
 /* Canvas Area */
 .canvas-container-wrapper {
   display: flex;
-  /* Vertically center the handle */
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
   padding: var(--spacing-md);
   background: var(--bg-input);
   border-radius: var(--radius-lg);
@@ -271,6 +297,58 @@ select:focus {
   align-items: center;
   margin: auto;
   /* Safe centering: centers when small, aligns start when overflowing */
+}
+
+.dimension-controls {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dimension-controls.hidden {
+  display: none;
+}
+
+.dimension-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.dimension-input-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.dimension-input {
+  width: 80px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  font-size: 14px;
+  text-align: center;
+}
+
+.dimension-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+.dimension-unit {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 #fabricCanvas {
@@ -539,6 +617,75 @@ input:checked+.slider:before {
   position: relative;
   top: 50%;
   transform: translateY(-50%);
+}
+
+.modal-close {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: none;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+}
+
+.header-btn {
+  z-index: 10;
+}
+
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.shortcut-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.shortcut-item:last-child {
+  border-bottom: none;
+}
+
+.shortcut-description {
+  color: var(--text-main);
+  flex: 1;
+}
+
+.shortcut-keys {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.shortcut-key {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-main);
+  font-family: monospace;
 }
 
 .modal h2 {
