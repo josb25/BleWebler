@@ -231,13 +231,19 @@
             </div>
           </div>
 
-          <div id="image-controls-group" class="control-group" style="display: none;">
+          <div id="image-controls-group" class="control-group" style="display: none; flex-direction: column; gap: var(--spacing-xs);">
+            <div style="display: flex; flex-direction: column; gap: var(--spacing-xs);">
+              <label for="ditheringAlgorithmSelect" style="font-weight: 500; font-size: 0.9rem;">Dithering Algorithm:</label>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
+                Thermal printers only print black or white pixels. Dithering converts grayscale/color images to 1-bit (black & white) by using patterns to simulate shades of gray. Different algorithms produce different visual effects - experiment to see which looks best for your images.
+              </p>
+            </div>
             <select id="ditheringAlgorithmSelect" title="Dithering: Converts color/grayscale images to black & white for thermal printers. Different algorithms produce different visual effects." class="flex-grow">
-              <option value="none">No Dithering (Simple threshold)</option>
-              <option value="floyd-steinberg">Floyd-Steinberg (Error diffusion - smooth)</option>
-              <option value="atkinson">Atkinson (Error diffusion - softer)</option>
-              <option value="bayer">Bayer (Ordered dithering - pattern)</option>
-              <option value="binary-threshold">Binary Threshold (Simple threshold)</option>
+              <option value="none">No Dithering (Simple threshold - fastest, but can look harsh)</option>
+              <option value="floyd-steinberg">Floyd-Steinberg (Error diffusion - smooth gradients, recommended)</option>
+              <option value="atkinson">Atkinson (Error diffusion - softer appearance, good for photos)</option>
+              <option value="bayer">Bayer (Ordered dithering - creates visible pattern, faster processing)</option>
+              <option value="binary-threshold">Binary Threshold (Simple threshold - same as No Dithering)</option>
             </select>
           </div>
         </div>
