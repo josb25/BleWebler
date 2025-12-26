@@ -114,21 +114,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Hide all option divs
       const textDiv = document.getElementById("textOptions");
-      const qrDiv = document.getElementById("qrcodeOptions");
       const infoDiv = document.getElementById("infoOptions");
 
-      if (!textDiv || !qrDiv || !infoDiv) {
+      if (!textDiv || !infoDiv) {
         console.error("Option divs not found!");
         return;
       }
 
       textDiv.style.display = "none";
-      qrDiv.style.display = "none";
       infoDiv.style.display = "none";
 
       // Show selected option
       if (type === "text") textDiv.style.display = "block";
-      else if (type === "qrcode") qrDiv.style.display = "block";
       else if (type === "info") {
         infoDiv.style.display = "block";
         handleInfoTab();
@@ -183,6 +180,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const paperHeightInput = document.getElementById("paperHeight");
   const settingsBtn = document.getElementById("settingsBtn");
   const infinitePaperCheckbox = document.getElementById("infinitePaperCheckbox");
+
+  // Show/hide label spacing based on infinite paper setting
+  const labelSpacingContainer = document.getElementById("labelSpacingContainer");
+  if (infinitePaperCheckbox && labelSpacingContainer) {
+    const updateSpacingVisibility = () => {
+      labelSpacingContainer.style.display = infinitePaperCheckbox.checked ? 'none' : 'flex';
+    };
+    infinitePaperCheckbox.addEventListener("change", updateSpacingVisibility);
+    updateSpacingVisibility(); // Set initial state
+  }
   const resizeHandle = document.getElementById("resizeHandle");
   const canvasWrapper = document.getElementById("canvasWrapper");
   const homeTitle = document.getElementById("homeTitle");

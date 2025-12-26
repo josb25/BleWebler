@@ -192,6 +192,97 @@ function deleteSelectedObject() {
   }
 }
 
+function addQRCodeToCanvas() {
+  // Check if QRCode library is loaded
+  if (typeof QRCode === 'undefined') {
+    alert("QR code library failed to load. Please refresh the page.");
+    console.error('QRCode library not available');
+    return;
+  }
+
+  // Prompt user for QR code content
+  const qrContent = prompt("Enter text or URL for QR code:", "https://example.com");
+  if (!qrContent || qrContent.trim() === "") {
+    return;
+  }
+
+  // Create a temporary container for QR code generation
+  const tempDiv = document.createElement('div');
+  tempDiv.style.position = 'absolute';
+  tempDiv.style.left = '-9999px';
+  tempDiv.style.width = '200px';
+  tempDiv.style.height = '200px';
+  document.body.appendChild(tempDiv);
+
+  // Generate QR code using the library (this library uses constructor pattern)
+  const qrcode = new QRCode(tempDiv, {
+    text: qrContent,
+    width: 200,
+    height: 200,
+    colorDark: '#000000',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  // Wait a bit for the QR code to render, then get the image
+  setTimeout(() => {
+    // Get the canvas or image element from the QR code
+    const qrImg = tempDiv.querySelector('img');
+    const qrCanvas = tempDiv.querySelector('canvas');
+    
+    let imageSrc;
+    if (qrImg && qrImg.src) {
+      imageSrc = qrImg.src;
+    } else if (qrCanvas) {
+      imageSrc = qrCanvas.toDataURL('image/png');
+    } else {
+      // Fallback: try to get from SVG
+      const qrSvg = tempDiv.querySelector('svg');
+      if (qrSvg) {
+        const svgData = new XMLSerializer().serializeToString(qrSvg);
+        imageSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+      } else {
+        alert("Failed to generate QR code image.");
+        document.body.removeChild(tempDiv);
+        return;
+      }
+    }
+
+    // Add QR code image to canvas
+    fabric.Image.fromURL(imageSrc, function (img) {
+      const canvasWidth = canvas.getWidth();
+      const canvasHeight = canvas.getHeight();
+      
+      // Scale QR code to fit within the label (max 80% of canvas width and height)
+      const maxWidth = canvasWidth * 0.8;
+      const maxHeight = canvasHeight * 0.8;
+      
+      // Calculate scale based on both width and height constraints
+      const scaleX = maxWidth / img.width;
+      const scaleY = maxHeight / img.height;
+      const scale = Math.min(scaleX, scaleY, 1); // Use the smaller scale to fit both dimensions
+      
+      img.set({
+        scaleX: scale,
+        scaleY: scale,
+        left: (canvasWidth - img.width * scale) / 2, // Center horizontally
+        top: (canvasHeight - img.height * scale) / 2, // Center vertically
+        isQRCode: true,
+        qrContent: qrContent // Store the content for potential re-editing
+      });
+      
+      canvas.add(img);
+      canvas.setActiveObject(img);
+      canvas.renderAll();
+      
+      // Clean up temporary div
+      document.body.removeChild(tempDiv);
+    }, {
+      crossOrigin: 'anonymous'
+    });
+  }, 100);
+}
+
 function applyTextProperties() {
   const activeObject = canvas.getActiveObject();
   if (activeObject && activeObject.type === 'i-text') {

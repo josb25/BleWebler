@@ -50,8 +50,17 @@ async function printLabel() {
       const printer = supportedPrinters.find(p => p.pattern.test(device.name));
       const infinitePaperCheckbox = document.getElementById("infinitePaperCheckbox");
       const isSegmented = infinitePaperCheckbox ? !infinitePaperCheckbox.checked : true; // Default to segmented if checkbox missing
+      const isInfinitePaper = infinitePaperCheckbox ? infinitePaperCheckbox.checked : false;
+      
+      // Get copy count and spacing
+      const copyCountInput = document.getElementById("copyCount");
+      const copyCount = copyCountInput ? parseInt(copyCountInput.value) || 1 : 1;
+      
+      const spacingInput = document.getElementById("labelSpacing");
+      const spacingMm = spacingInput && !isInfinitePaper ? parseFloat(spacingInput.value) || 0 : 0;
 
-      await printerInstance.print(device, constructBitmap(printer.px), isSegmented);
+      // Construct bitmap with all copies, spacing, and separators
+      await printerInstance.print(device, constructBitmap(printer.px, copyCount, isInfinitePaper, spacingMm), isSegmented);
     }
 
   } catch (err) {
@@ -88,7 +97,7 @@ function log(message) {
 
 
 
-function constructBitmap(canvasHeight) {
+function constructBitmap(canvasHeight, copyCount = 1, isInfinitePaper = false, spacingMm = 0) {
   const fabricCanvas = getFabricCanvas();
   if (!fabricCanvas) {
     log("Fabric.js canvas not initialized.");
@@ -99,18 +108,66 @@ function constructBitmap(canvasHeight) {
   const tempCtx = tempCanvas.getContext("2d");
 
   const canvasWidth = fabricCanvas.width; // Use Fabric canvas width
+  
+  // Get printer DPM for spacing calculations
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlPrinter = urlParams.get('printer');
+  let dpm = 8; // Default
+  if (urlPrinter !== null && typeof supportedPrinters !== 'undefined') {
+    const pIndex = parseInt(urlPrinter);
+    if (!isNaN(pIndex) && supportedPrinters[pIndex]) {
+      dpm = supportedPrinters[pIndex].dpm;
+    }
+  }
+  
+  const spacingPx = Math.round(spacingMm * dpm);
+  const separatorLineWidth = 1; // 1 pixel wide vertical line
+
+  // Calculate total height needed
+  let totalHeight = canvasHeight * copyCount;
+  if (isInfinitePaper) {
+    // Add separator lines between copies (1px each)
+    totalHeight += (copyCount - 1) * separatorLineWidth;
+  } else {
+    // Add spacing between copies for segmented paper
+    totalHeight += (copyCount - 1) * spacingPx;
+  }
+  
   tempCanvas.width = canvasWidth;
-  tempCanvas.height = canvasHeight;
+  tempCanvas.height = totalHeight;
+  
+  // Fill with white background
+  tempCtx.fillStyle = '#ffffff';
+  tempCtx.fillRect(0, 0, canvasWidth, totalHeight);
 
   // Render the fabric canvas content onto the temporary canvas
-  fabricCanvas.backgroundColor = '#ffffff'; // Ensure white background
-  fabricCanvas.renderAll(); // Re-render to ensure background is applied if needed
-  tempCtx.drawImage(fabricCanvas.getElement(), 0, 0, canvasWidth, canvasHeight);
+  fabricCanvas.backgroundColor = '#ffffff';
+  fabricCanvas.renderAll();
+  
+  let currentY = 0;
+  for (let copy = 0; copy < copyCount; copy++) {
+    // Draw the label
+    tempCtx.drawImage(fabricCanvas.getElement(), 0, currentY, canvasWidth, canvasHeight);
+    currentY += canvasHeight;
+    
+    // Add separator or spacing
+    if (copy < copyCount - 1) { // Don't add after last copy
+      if (isInfinitePaper) {
+        // Draw vertical line separator
+        tempCtx.fillStyle = '#000000';
+        tempCtx.fillRect(0, currentY, canvasWidth, separatorLineWidth);
+        currentY += separatorLineWidth;
+      } else {
+        // Add spacing (already white, just move position)
+        currentY += spacingPx;
+      }
+    }
+  }
 
-  const imgData = tempCtx.getImageData(0, 0, canvasWidth, canvasHeight).data;
+  const imgData = tempCtx.getImageData(0, 0, canvasWidth, totalHeight).data;
 
   const bitmap = [];
-  for (let y = 0; y < canvasHeight; y++) {
+  for (let y = 0; y < totalHeight; y++) {
     let row = "";
     for (let x = 0; x < canvasWidth; x++) {
       const i = (y * canvasWidth + x) * 4;

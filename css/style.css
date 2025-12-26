@@ -725,3 +725,13 @@ input:checked+.slider:before {
 #paperHeight {
   width: 120px;
 }
+
+#copyCount,
+#labelSpacing {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  font-size: 14px;
+}
