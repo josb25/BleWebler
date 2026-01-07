@@ -34,6 +34,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const fontList = document.getElementById("fontList");
   const loadSystemFontsBtn = document.getElementById("loadSystemFontsBtn");
   const fontSizeInput = document.getElementById("fontSize");
+  const noBluetoothModal = document.getElementById("noBluetoothModal");
+
+  // Check for Web Bluetooth support
+  if (!navigator.bluetooth) {
+    if (noBluetoothModal) {
+      noBluetoothModal.classList.add("show");
+    }
+  }
+
+  const dismissBluetoothModalBtn = document.getElementById("dismissBluetoothModalBtn");
+  if (dismissBluetoothModalBtn && noBluetoothModal) {
+    dismissBluetoothModalBtn.addEventListener("click", () => {
+      noBluetoothModal.classList.remove("show");
+    });
+  }
 
   // Basic web-safe fonts
   const basicFonts = ["Arial", "Verdana", "Times New Roman", "Courier New", "Georgia", "Impact", "Tahoma", "Trebuchet MS"];
