@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   fontSizeInput = document.getElementById('fontSize');
   fontFamilyInput = document.getElementById('fontFamilyInput');
   ditheringAlgorithmSelect = document.getElementById('ditheringAlgorithmSelect'); // Initialize new reference
-  
+
   // QR Code content input event listener
   const qrContentInput = document.getElementById('qrContentInput');
   if (qrContentInput) {
@@ -51,20 +51,32 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   canvas.on('selection:created', updateTextControls);
   canvas.on('object:modified', handleObjectModified); // Update controls when object is modified (e.g., scaled)
-  
+
   // Constrain object scaling to stay within padding bounds
   canvas.on('object:scaling', (e) => {
     const obj = e.target;
+
+    // QR Code Snapping Logic
+    if (obj.isQRCode && obj.qrModuleCount) {
+      const currentScaledWidth = obj.width * obj.scaleX;
+      let moduleSize = Math.round(currentScaledWidth / obj.qrModuleCount);
+      if (moduleSize < 1) moduleSize = 1;
+
+      const newScale = (moduleSize * obj.qrModuleCount) / obj.width;
+      obj.scaleX = newScale;
+      obj.scaleY = newScale;
+    }
+
     const bounds = getPaddingBounds();
-    
+
     // Get object dimensions after scaling
     const objWidth = obj.getScaledWidth();
     const objHeight = obj.getScaledHeight();
-    
+
     // Constrain position if object would go outside bounds
     let newLeft = obj.left;
     let newTop = obj.top;
-    
+
     // Left constraint
     if (newLeft < bounds.left) {
       newLeft = bounds.left;
@@ -81,22 +93,30 @@ document.addEventListener("DOMContentLoaded", () => {
     if (newTop + objHeight > bounds.bottom) {
       newTop = bounds.bottom - objHeight;
     }
-    
+
     // If position needs adjustment, adjust scale instead to keep object within bounds
     if (newLeft !== obj.left || newTop !== obj.top) {
       // Calculate maximum allowed dimensions
       const maxWidth = bounds.right - bounds.left;
       const maxHeight = bounds.bottom - bounds.top;
-      
+
       // Limit scale to fit within bounds
       const scaleX = obj.scaleX;
       const scaleY = obj.scaleY;
       const baseWidth = obj.width;
       const baseHeight = obj.height;
-      
-      const newScaleX = Math.min(scaleX, maxWidth / baseWidth);
-      const newScaleY = Math.min(scaleY, maxHeight / baseHeight);
-      
+
+      // For QR codes, we also need to snap when constraining to bounds
+      let newScaleX = Math.min(scaleX, maxWidth / baseWidth);
+      let newScaleY = Math.min(scaleY, maxHeight / baseHeight);
+
+      if (obj.isQRCode && obj.qrModuleCount) {
+        let moduleSizeX = Math.floor((newScaleX * baseWidth) / obj.qrModuleCount);
+        if (moduleSizeX < 1) moduleSizeX = 1;
+        newScaleX = (moduleSizeX * obj.qrModuleCount) / baseWidth;
+        newScaleY = newScaleX; // Keep aspect ratio
+      }
+
       obj.set({
         scaleX: newScaleX,
         scaleY: newScaleY,
@@ -105,20 +125,20 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   });
-  
+
   // Constrain object movement to stay within padding bounds
   canvas.on('object:moving', (e) => {
     const obj = e.target;
     const bounds = getPaddingBounds();
-    
+
     // Get object dimensions
     const objWidth = obj.getScaledWidth();
     const objHeight = obj.getScaledHeight();
-    
+
     // Constrain position
     let newLeft = obj.left;
     let newTop = obj.top;
-    
+
     // Left constraint
     if (newLeft < bounds.left) {
       newLeft = bounds.left;
@@ -135,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (newTop + objHeight > bounds.bottom) {
       newTop = bounds.bottom - objHeight;
     }
-    
+
     obj.set({
       left: newLeft,
       top: newTop
@@ -190,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
               const bounds = getPaddingBounds();
               const contentHeight = bounds.bottom - bounds.top;
-              
+
               img.set({
                 scaleX: 1, // Image data is already scaled, so set base scale to 1
                 scaleY: 1, // Image data is already scaled, so set base scale to 1
@@ -342,12 +362,18 @@ function addQRCodeToCanvas() {
     correctLevel: QRCode.CorrectLevel.H
   });
 
+  // Capture module count for snapping
+  let moduleCount = 21; // Default fallback
+  if (qrcode._oQRCode && qrcode._oQRCode.moduleCount) {
+    moduleCount = qrcode._oQRCode.moduleCount;
+  }
+
   // Wait a bit for the QR code to render, then get the image
   setTimeout(() => {
     // Get the canvas or image element from the QR code
     const qrImg = tempDiv.querySelector('img');
     const qrCanvas = tempDiv.querySelector('canvas');
-    
+
     let imageSrc;
     if (qrImg && qrImg.src) {
       imageSrc = qrImg.src;
@@ -371,32 +397,47 @@ function addQRCodeToCanvas() {
       const bounds = getPaddingBounds();
       const contentWidth = bounds.right - bounds.left;
       const contentHeight = bounds.bottom - bounds.top;
-      
+
       // Scale QR code to fit within the padding bounds (max 80% of content area)
       const maxWidth = contentWidth * 0.8;
       const maxHeight = contentHeight * 0.8;
-      
-      // Calculate scale based on both width and height constraints
-      const scaleX = maxWidth / img.width;
-      const scaleY = maxHeight / img.height;
-      const scale = Math.min(scaleX, scaleY, 1); // Use the smaller scale to fit both dimensions
-      
+
+      // Calculate scale based on module count to snap to integer pixels
+      // Each module should be an integer number of pixels (1x, 2x, 3x...)
+      let targetModuleSize = 1;
+
+      // Try to make it as large as possible within the 80% bounds
+      const maxPossibleModuleScaleX = maxWidth / (img.width / (img.width / moduleCount)); // Approx? No.
+      // img.width is 200 (or whatever generated). moduleCount is real count.
+      // We want finalWidth = K * moduleCount.
+      // scale = finalWidth / img.width
+
+      // Calculate initial snap size
+      const availableSize = Math.min(maxWidth, maxHeight);
+      let idealModuleSizePixels = Math.floor(availableSize / moduleCount);
+      if (idealModuleSizePixels < 1) idealModuleSizePixels = 1;
+
+      const targetDimension = idealModuleSizePixels * moduleCount;
+      const scale = targetDimension / img.width;
+
       const scaledWidth = img.width * scale;
       const scaledHeight = img.height * scale;
-      
+
       img.set({
         scaleX: scale,
         scaleY: scale,
         left: bounds.left + (contentWidth - scaledWidth) / 2, // Center horizontally within padding bounds
         top: bounds.top + (contentHeight - scaledHeight) / 2, // Center vertically within padding bounds
         isQRCode: true,
-        qrContent: qrContent // Store the content for potential re-editing
+        qrContent: qrContent, // Store the content for potential re-editing
+        qrModuleCount: moduleCount,
+        lockUniScaling: true
       });
-      
+
       canvas.add(img);
       canvas.setActiveObject(img);
       canvas.renderAll();
-      
+
       // Clean up temporary div
       document.body.removeChild(tempDiv);
     }, {
@@ -409,26 +450,26 @@ function addQRCodeToCanvas() {
 function updateQRCodeFromInput() {
   const activeObject = canvas.getActiveObject();
   if (!activeObject || !activeObject.isQRCode) return;
-  
+
   const qrContentInput = document.getElementById('qrContentInput');
   if (!qrContentInput) return;
-  
+
   const newContent = qrContentInput.value.trim();
   if (!newContent || newContent === activeObject.qrContent) return;
-  
+
   // Check if QRCode library is loaded
   if (typeof QRCode === 'undefined') {
     alert("QR code library failed to load. Please refresh the page.");
     return;
   }
-  
+
   // Store current position and size
   const currentLeft = activeObject.left;
   const currentTop = activeObject.top;
   const currentScaleX = activeObject.scaleX;
   const currentScaleY = activeObject.scaleY;
   const currentAngle = activeObject.angle || 0;
-  
+
   // Create a temporary container for QR code generation
   const tempDiv = document.createElement('div');
   tempDiv.style.position = 'absolute';
@@ -436,7 +477,7 @@ function updateQRCodeFromInput() {
   tempDiv.style.width = '200px';
   tempDiv.style.height = '200px';
   document.body.appendChild(tempDiv);
-  
+
   // Generate new QR code
   const qrcode = new QRCode(tempDiv, {
     text: newContent,
@@ -446,12 +487,18 @@ function updateQRCodeFromInput() {
     colorLight: '#FFFFFF',
     correctLevel: QRCode.CorrectLevel.H
   });
-  
+
+  // Capture module count for snapping
+  let moduleCount = 21; // Default fallback
+  if (qrcode._oQRCode && qrcode._oQRCode.moduleCount) {
+    moduleCount = qrcode._oQRCode.moduleCount;
+  }
+
   // Wait for QR code to render
   setTimeout(() => {
     const qrImg = tempDiv.querySelector('img');
     const qrCanvas = tempDiv.querySelector('canvas');
-    
+
     let imageSrc;
     if (qrImg && qrImg.src) {
       imageSrc = qrImg.src;
@@ -468,31 +515,37 @@ function updateQRCodeFromInput() {
         return;
       }
     }
-    
+
     // Replace the QR code image while maintaining position and size
     fabric.Image.fromURL(imageSrc, function (newImg) {
-      // Calculate the scale to match the original size
+      // Logic to maintain size but snap to new module count
       const originalScaledWidth = activeObject.getScaledWidth();
-      const originalScaledHeight = activeObject.getScaledHeight();
-      const newScaleX = originalScaledWidth / newImg.width;
-      const newScaleY = originalScaledHeight / newImg.height;
-      
+
+      // Try to keep similar physical size, but snap to new module count
+      let idealModuleSizePixels = Math.round(originalScaledWidth / moduleCount);
+      if (idealModuleSizePixels < 1) idealModuleSizePixels = 1;
+
+      const targetDimension = idealModuleSizePixels * moduleCount;
+      const newScale = targetDimension / newImg.width;
+
       newImg.set({
-        scaleX: newScaleX,
-        scaleY: newScaleY,
+        scaleX: newScale, // Snap scale
+        scaleY: newScale, // Snap scale
         left: currentLeft,
         top: currentTop,
         angle: currentAngle,
         isQRCode: true,
-        qrContent: newContent
+        qrContent: newContent,
+        qrModuleCount: moduleCount,
+        lockUniScaling: true
       });
-      
+
       // Replace the old QR code with the new one
       canvas.remove(activeObject);
       canvas.add(newImg);
       canvas.setActiveObject(newImg);
       canvas.renderAll();
-      
+
       // Clean up temporary div
       document.body.removeChild(tempDiv);
     }, {
@@ -790,7 +843,7 @@ window.fabricEditor = {
       canvas.renderAll();
     }
   },
-  
+
   setPadding: function (top, bottom, left, right) {
     paddingState.top = top;
     paddingState.bottom = bottom;
@@ -799,7 +852,7 @@ window.fabricEditor = {
     updatePaddingGuides();
     canvas.renderAll();
   },
-  
+
   getPaddingBounds: function () {
     return getPaddingBounds();
   }
@@ -809,7 +862,7 @@ window.fabricEditor = {
 function getPaddingBounds() {
   const canvasWidth = canvas.getWidth();
   const canvasHeight = canvas.getHeight();
-  
+
   return {
     left: paddingState.left,
     top: paddingState.top,
@@ -822,20 +875,20 @@ function getPaddingBounds() {
 function updatePaddingGuides() {
   const canvasWidth = canvas.getWidth();
   const canvasHeight = canvas.getHeight();
-  
+
   // Remove existing guides
   Object.values(paddingGuides).forEach(guide => {
     if (guide) {
       canvas.remove(guide);
     }
   });
-  
+
   // Only show guides if padding is set
-  if (paddingState.top === 0 && paddingState.bottom === 0 && 
-      paddingState.left === 0 && paddingState.right === 0) {
+  if (paddingState.top === 0 && paddingState.bottom === 0 &&
+    paddingState.left === 0 && paddingState.right === 0) {
     return;
   }
-  
+
   // Create guide rectangles (semi-transparent overlays)
   const guideOptions = {
     fill: 'rgba(255, 0, 0, 0.1)',
@@ -846,7 +899,7 @@ function updatePaddingGuides() {
     excludeFromExport: true,
     paddingGuide: true
   };
-  
+
   // Top padding guide
   if (paddingState.top > 0) {
     paddingGuides.top = new fabric.Rect({
@@ -859,7 +912,7 @@ function updatePaddingGuides() {
     canvas.add(paddingGuides.top);
     canvas.sendToBack(paddingGuides.top);
   }
-  
+
   // Bottom padding guide
   if (paddingState.bottom > 0) {
     paddingGuides.bottom = new fabric.Rect({
@@ -872,7 +925,7 @@ function updatePaddingGuides() {
     canvas.add(paddingGuides.bottom);
     canvas.sendToBack(paddingGuides.bottom);
   }
-  
+
   // Left padding guide
   if (paddingState.left > 0) {
     paddingGuides.left = new fabric.Rect({
@@ -885,7 +938,7 @@ function updatePaddingGuides() {
     canvas.add(paddingGuides.left);
     canvas.sendToBack(paddingGuides.left);
   }
-  
+
   // Right padding guide
   if (paddingState.right > 0) {
     paddingGuides.right = new fabric.Rect({
