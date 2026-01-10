@@ -122,6 +122,12 @@ function constructBitmap(canvasHeight) {
     return null;
   }
 
+  // Save current selection and deselect
+  const activeObject = fabricCanvas.getActiveObject();
+  fabricCanvas.discardActiveObject();
+  fabricCanvas.requestRenderAll();
+  fabricCanvas.renderAll(); // Ensure render happens synchronously
+
   const tempCanvas = document.createElement("canvas");
   const tempCtx = tempCanvas.getContext("2d");
 
@@ -133,6 +139,12 @@ function constructBitmap(canvasHeight) {
   fabricCanvas.backgroundColor = '#ffffff'; // Ensure white background
   fabricCanvas.renderAll(); // Re-render to ensure background is applied if needed
   tempCtx.drawImage(fabricCanvas.getElement(), 0, 0, canvasWidth, canvasHeight);
+
+  // Restore selection
+  if (activeObject) {
+    fabricCanvas.setActiveObject(activeObject);
+    fabricCanvas.requestRenderAll();
+  }
 
   const imgData = tempCtx.getImageData(0, 0, canvasWidth, canvasHeight).data;
 
