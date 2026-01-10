@@ -155,13 +155,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // QR Code Snapping Logic
     if (obj.isQRCode && obj.qrModuleCount) {
-      const currentScaledWidth = obj.width * obj.scaleX;
-      let moduleSize = Math.round(currentScaledWidth / obj.qrModuleCount);
+      let currentScaledDimension;
+      let baseDimension;
+
+      const corner = (e.transform && e.transform.corner) ? e.transform.corner : 'br';
+
+      // If dragging vertical handles (mt/mb), use height/scaleY as the driver
+      if (corner === 'mt' || corner === 'mb') {
+        currentScaledDimension = obj.height * obj.scaleY;
+        baseDimension = obj.height || 1;
+      } else {
+        // Default to width/scaleX for everything else
+        currentScaledDimension = obj.width * obj.scaleX;
+        baseDimension = obj.width || 1;
+      }
+
+      let moduleSize = Math.round(currentScaledDimension / obj.qrModuleCount);
       if (moduleSize < 1) moduleSize = 1;
 
-      const newScale = (moduleSize * obj.qrModuleCount) / obj.width;
-      obj.scaleX = newScale;
-      obj.scaleY = newScale;
+      const newScale = (moduleSize * obj.qrModuleCount) / baseDimension;
+
+      // Update scale while maintaining the correct anchor point
+      // When resizing from top/left, we must adjust position because Fabric's scale change
+      // is always relative to the object's origin (usually top-left), but user interaction
+      // expects a different fixed point (e.g. dragging TL means BR is fixed).
+      if (e.transform && e.transform.corner) {
+        const corner = e.transform.corner;
+        const cornerMap = {
+          'tl': { x: 'right', y: 'bottom' },
+          'tr': { x: 'left', y: 'bottom' },
+          'bl': { x: 'right', y: 'top' },
+          'br': { x: 'left', y: 'top' },
+          'mt': { x: 'center', y: 'bottom' },
+          'mb': { x: 'center', y: 'top' },
+          'ml': { x: 'right', y: 'center' },
+          'mr': { x: 'left', y: 'center' }
+        };
+
+        // If we have a defined pivot for this corner
+        if (cornerMap[corner]) {
+          const pivot = cornerMap[corner];
+          // Get current absolute position of pivot with CURRENT scale/pos
+          const pivotPoint = obj.translateToOriginPoint(obj.getCenterPoint(), pivot.x, pivot.y);
+
+          // Update scale
+          obj.scaleX = newScale;
+          obj.scaleY = newScale;
+
+          // Adjust position so pivot remains at pivotPoint with NEW scale
+          obj.setPositionByOrigin(pivotPoint, pivot.x, pivot.y);
+        } else {
+          // Fallback (e.g. rotation or unknown)
+          obj.scaleX = newScale;
+          obj.scaleY = newScale;
+        }
+      } else {
+        // Fallback if no transform info
+        obj.scaleX = newScale;
+        obj.scaleY = newScale;
+      }
     }
 
     const bounds = getPaddingBounds();
