@@ -10,17 +10,73 @@
 
 <body>
   <div class="container">
-    <header>
-      <h1>BleWebler</h1>
-      <p class="subtitle">Open Source BLE Web Labeler</p>
-      <!-- Settings Button -->
-      <button id="settingsBtn" class="btn btn-icon" style="position: absolute; top: 1rem; right: 1rem;"
-        title="Paper Settings">
-        <svg class="icon" viewBox="0 0 24 24">
-          <path
-            d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L5.09 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+    <!-- Warning Banner -->
+    <!--<div id="warningBanner" class="warning-banner">
+      <div class="warning-content">
+        <svg class="warning-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 22h20L12 2zm0 4l7.5 14h-15L12 6zm0 8v4h2v-4h-2zm0 6v2h2v-2h-2z" fill="currentColor" />
         </svg>
-      </button>
+        <span><strong>Warning:</strong> Use at your own risk.</span>
+      </div>
+    </div>-->
+    <header>
+      <div class="header-content">
+        <div class="header-left"></div>
+        <div class="header-center">
+          <h1 id="homeTitle" style="cursor: pointer;">BleWebler</h1>
+          <p class="subtitle">Open Source BLE Web Labeler</p>
+        </div>
+        <div class="header-right">
+          <!-- Shortcuts Button -->
+          <button id="shortcutsBtn" class="btn btn-icon header-btn" title="Keyboard Shortcuts">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M7 9C7 9.55228 6.55228 10 6 10C5.44772 10 5 9.55228 5 9C5 8.44772 5.44772 8 6 8C6.55228 8 7 8.44772 7 9Z"
+                fill="#FFFFFF" />
+              <path
+                d="M7 12C7 12.5523 6.55228 13 6 13C5.44772 13 5 12.5523 5 12C5 11.4477 5.44772 11 6 11C6.55228 11 7 11.4477 7 12Z"
+                fill="#FFFFFF" />
+              <path
+                d="M10 12C10 12.5523 9.55228 13 9 13C8.44772 13 8 12.5523 8 12C8 11.4477 8.44772 11 9 11C9.55228 11 10 11.4477 10 12Z"
+                fill="#FFFFFF" />
+              <path
+                d="M10 9C10 9.55228 9.55228 10 9 10C8.44772 10 8 9.55228 8 9C8 8.44772 8.44772 8 9 8C9.55228 8 10 8.44772 10 9Z"
+                fill="#FFFFFF" />
+              <path
+                d="M13 9C13 9.55228 12.5523 10 12 10C11.4477 10 11 9.55228 11 9C11 8.44772 11.4477 8 12 8C12.5523 8 13 8.44772 13 9Z"
+                fill="#FFFFFF" />
+              <path
+                d="M13 12C13 12.5523 12.5523 13 12 13C11.4477 13 11 12.5523 11 12C11 11.4477 11.4477 11 12 11C12.5523 11 13 11.4477 13 12Z"
+                fill="#FFFFFF" />
+              <path
+                d="M16 9C16 9.55228 15.5523 10 15 10C14.4477 10 14 9.55228 14 9C14 8.44772 14.4477 8 15 8C15.5523 8 16 8.44772 16 9Z"
+                fill="#FFFFFF" />
+              <path
+                d="M16 12C16 12.5523 15.5523 13 15 13C14.4477 13 14 12.5523 14 12C14 11.4477 14.4477 11 15 11C15.5523 11 16 11.4477 16 12Z"
+                fill="#FFFFFF" />
+              <path
+                d="M19 9C19 9.55228 18.5523 10 18 10C17.4477 10 17 9.55228 17 9C17 8.44772 17.4477 8 18 8C18.5523 8 19 8.44772 19 9Z"
+                fill="#FFFFFF" />
+              <path
+                d="M19 12C19 12.5523 18.5523 13 18 13C17.4477 13 17 12.5523 17 12C17 11.4477 17.4477 11 18 11C18.5523 11 19 11.4477 19 12Z"
+                fill="#FFFFFF" />
+              <path
+                d="M16 5C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5H12"
+                stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" fill="none" />
+              <path d="M7 16H17" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+          </button>
+          <!-- Settings Button -->
+          <button id="settingsBtn" class="btn btn-icon header-btn" title="Paper Settings">
+            <svg class="icon" viewBox="0 0 1280 1280">
+              <g transform="translate(0,1280) scale(0.1,-0.1)">
+                <path
+                  d="M6100 12794 c-399 -23 -950 -102 -1062 -152 -69 -31 -143 -105 -180 -180 l-33 -67 -5 -368 -5 -369 -170 -58 c-287 -98 -506 -189 -728 -303 l-118 -60 -252 250 c-300 298 -314 307 -467 308 -86 0 -101 -3 -160 -31 -110 -52 -431 -291 -670 -498 -211 -184 -532 -505 -716 -716 -206 -239 -445 -559 -498 -670 -28 -59 -31 -74 -30 -160 1 -156 8 -167 306 -467 l251 -252 -60 -118 c-114 -222 -205 -441 -303 -728 l-58 -170 -369 -5 -368 -5 -67 -33 c-75 -37 -149 -111 -180 -180 -37 -83 -102 -474 -135 -817 -24 -252 -24 -838 0 -1090 33 -343 98 -734 135 -817 31 -69 105 -143 180 -180 l67 -33 368 -5 369 -5 58 -170 c98 -287 189 -506 303 -728 l60 -118 -251 -252 c-298 -300 -305 -311 -306 -467 -1 -86 2 -101 30 -160 53 -111 292 -431 498 -670 184 -211 505 -532 716 -716 239 -207 560 -446 670 -498 59 -28 74 -31 160 -30 156 1 167 8 467 306 l252 251 118 -60 c222 -114 441 -205 728 -303 l170 -58 5 -369 5 -368 33 -67 c37 -75 111 -149 180 -180 83 -37 474 -102 817 -135 252 -24 838 -24 1090 0 343 33 734 98 817 135 69 31 143 105 180 180 l33 67 5 368 5 369 170 58 c287 98 506 189 728 303 l118 60 252 -250 c300 -298 314 -307 467 -308 86 0 101 3 160 31 110 52 431 291 670 498 211 184 532 505 716 716 206 239 445 559 498 670 28 59 31 74 30 160 -1 156 -8 167 -306 467 l-251 252 60 118 c114 222 205 441 303 728 l58 170 369 5 368 5 67 33 c75 37 149 111 180 180 37 83 102 474 135 817 24 252 24 838 0 1090 -33 343 -98 734 -135 817 -31 69 -105 143 -180 180 l-67 33 -368 5 -369 5 -58 170 c-98 287 -189 506 -303 728 l-60 118 251 252 c298 300 305 311 306 467 1 86 -2 101 -30 160 -53 111 -292 431 -498 670 -184 211 -505 532 -716 716 -239 207 -560 446 -670 498 -59 28 -74 31 -160 30 -156 -1 -167 -8 -467 -306 l-252 -251 -118 60 c-222 114 -441 205 -728 303 l-170 58 -5 369 -5 368 -33 67 c-37 75 -111 149 -180 180 -83 37 -480 103 -807 133 -161 15 -710 27 -855 19z m620 -3779 c474 -59 903 -235 1293 -532 131 -100 370 -339 470 -470 296 -389 473 -820 532 -1293 20 -162 20 -478 0 -640 -59 -473 -236 -904 -532 -1293 -100 -131 -339 -370 -470 -470 -390 -297 -819 -473 -1293 -532 -162 -20 -478 -20 -640 0 -474 59 -903 235 -1293 532 -131 100 -370 339 -470 470 -296 389 -473 820 -532 1293 -20 162 -20 478 0 640 59 473 236 904 532 1293 100 131 339 370 470 470 385 292 816 471 1281 531 150 19 498 20 652 1z" />
+              </g>
+            </svg>
+          </button>
+        </div>
+      </div>
     </header>
 
     <main>
@@ -30,12 +86,6 @@
           <svg class="icon" viewBox="0 0 24 24">
             <path d="M4 4h16v2H4V4zm6 4h4v12h-4V8z" />
           </svg> Text
-        </button>
-        <button class="label-type-btn" data-type="qrcode">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path
-              d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm8 2h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm2-2h2v2h-2v-2zm2 2h2v2h-2v-2z" />
-          </svg> QR Code
         </button>
         <button class="label-type-btn" data-type="info">
           <svg class="icon" viewBox="0 0 24 24">
@@ -51,11 +101,29 @@
           <div class="canvas-content">
             <canvas id="fabricCanvas" width="384" height="96"></canvas>
             <div id="resizeHandle" class="resize-handle hidden" title="Drag to resize">
-              <svg class="icon" viewBox="0 0 24 24">
-                <path
-                  d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 10c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0-6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />
+              <svg class="icon" viewBox="0 0 24 48" width="24" height="48">
+                <!-- Left column: 3 evenly spaced dots -->
+                <circle cx="8" cy="12" r="2" />
+                <circle cx="8" cy="24" r="2" />
+                <circle cx="8" cy="36" r="2" />
+                <!-- Right column: 3 evenly spaced dots -->
+                <circle cx="16" cy="12" r="2" />
+                <circle cx="16" cy="24" r="2" />
+                <circle cx="16" cy="36" r="2" />
               </svg>
             </div>
+          </div>
+        </div>
+        <div id="dimensionControls" class="dimension-controls hidden">
+          <div class="dimension-input-group">
+            <label>Width:</label>
+            <input type="number" id="widthInput" class="dimension-input" step="0.1" min="1" />
+            <span class="dimension-unit">mm</span>
+          </div>
+          <div class="dimension-input-group">
+            <label>Height:</label>
+            <input type="number" id="heightInput" class="dimension-input" step="0.1" min="1" />
+            <span class="dimension-unit">mm</span>
           </div>
         </div>
 
@@ -75,6 +143,12 @@
               </svg>
             </button>
             <input type="file" id="imageUploadInput" accept="image/*" class="visually-hidden" />
+            <button onclick="addQRCodeToCanvas()" class="btn btn-icon btn-secondary" title="Add QR Code">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path
+                  d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h2v2h-2v-2zm0 4h2v2h-2v-2zm-4-4h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2z" />
+              </svg>
+            </button>
             <button onclick="deleteSelectedObject()" class="btn btn-icon btn-danger" title="Delete Selected">
               <svg class="icon" viewBox="0 0 24 24">
                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
@@ -157,27 +231,74 @@
             </button>
           </div>
 
-          <div id="image-controls-group" class="control-group" style="display: none;">
-            <select id="ditheringAlgorithmSelect" title="Dithering Algorithm" class="flex-grow">
-              <option value="none">No Dithering</option>
-              <option value="floyd-steinberg">Floyd-Steinberg</option>
-              <option value="atkinson">Atkinson</option>
-              <option value="bayer">Bayer</option>
-              <option value="binary-threshold">Binary Threshold</option>
+          <div id="padding-controls-group" class="control-group mb-4">
+            <label
+              style="font-weight: 500; margin-bottom: var(--spacing-xs); display: block; font-size: 0.9rem;">Padding
+              (mm):</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-sm);">
+              <div>
+                <label for="paddingTop" style="font-size: 0.85rem; color: var(--text-muted);">Top:</label>
+                <input type="number" id="paddingTop" value="0" min="0" step="0.5" style="width: 80px;">
+              </div>
+              <div>
+                <label for="paddingBottom" style="font-size: 0.85rem; color: var(--text-muted);">Bottom:</label>
+                <input type="number" id="paddingBottom" value="0" min="0" step="0.5" style="width: 80px;">
+              </div>
+              <div>
+                <label for="paddingLeft" style="font-size: 0.85rem; color: var(--text-muted);">Left:</label>
+                <input type="number" id="paddingLeft" value="0" min="0" step="0.5" style="width: 80px;">
+              </div>
+              <div>
+                <label for="paddingRight" style="font-size: 0.85rem; color: var(--text-muted);">Right:</label>
+                <input type="number" id="paddingRight" value="0" min="0" step="0.5" style="width: 80px;">
+              </div>
+            </div>
+          </div>
+
+          <div id="qr-controls-group" class="control-group" style="display: none;">
+            <label for="qrContentInput"
+              style="font-weight: 500; font-size: 0.9rem; margin-bottom: var(--spacing-xs); display: block;">QR Code
+              Content:</label>
+            <input type="text" id="qrContentInput" placeholder="Enter text or URL for QR code" class="flex-grow" />
+          </div>
+
+          <div id="image-controls-group" class="control-group"
+            style="display: none; flex-direction: column; gap: var(--spacing-xs);">
+            <div style="display: flex; flex-direction: column; gap: var(--spacing-xs);">
+              <label for="ditheringAlgorithmSelect" style="font-weight: 500; font-size: 0.9rem;">Dithering
+                Algorithm:</label>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
+                Thermal printers only print black or white pixels. Dithering converts grayscale/color images to 1-bit
+                (black & white) by using patterns to simulate shades of gray. Different algorithms produce different
+                visual effects - experiment to see which looks best for your images.
+              </p>
+            </div>
+            <select id="ditheringAlgorithmSelect"
+              title="Dithering: Converts color/grayscale images to black & white for thermal printers. Different algorithms produce different visual effects."
+              class="flex-grow">
+              <option value="none">No Dithering (Simple threshold - fastest, but can look harsh)</option>
+              <option value="floyd-steinberg">Floyd-Steinberg (Error diffusion - smooth gradients, recommended)</option>
+              <option value="atkinson">Atkinson (Error diffusion - softer appearance, good for photos)</option>
+              <option value="bayer">Bayer (Ordered dithering - creates visible pattern, faster processing)</option>
+              <option value="binary-threshold">Binary Threshold (Simple threshold - same as No Dithering)</option>
             </select>
           </div>
         </div>
       </section>
 
-      <div id="qrcodeOptions" class="card" style="display:none;">
-        <p class="text-muted">Work in Progress.</p>
-      </div>
 
       <div id="infoOptions" class="card" style="display:none;">
         <h3 class="canvas-content">Printer Information</h3>
         <pre id="printerInfoDisplay">
           Click to retrieve info...</pre>
         <button id="refreshInfoBtn" class="btn btn-secondary mt-2">Refresh Info</button>
+      </div>
+
+      <div class="control-group" style="margin-bottom: var(--spacing-md);">
+        <label for="copyCount"
+          style="margin-right: var(--spacing-sm); display: flex; align-items: center;">Copies:</label>
+        <input type="number" id="copyCount" value="1" min="1" max="100"
+          style="width: 80px; margin-right: var(--spacing-md);">
       </div>
 
       <button id="printButton" class="btn btn-block" style="height: 3.5rem; font-size: 1.1rem;">
@@ -194,6 +315,7 @@
     <!-- Printer Selection Modal -->
     <div id="startupModal" class="modal">
       <div class="modal-content">
+        <button class="modal-close" id="closeSettingsModal" title="Close">×</button>
         <h2>Setup Printer</h2>
         <div class="form-group">
           <p>Your selections will be saved in the URL.</p>
@@ -237,16 +359,28 @@
         <button id="dismissBluetoothModalBtn" class="btn btn-secondary mt-4">Dismiss</button>
       </div>
     </div>
+
+    <!-- Shortcuts Modal -->
+    <div id="shortcutsModal" class="modal">
+      <div class="modal-content">
+        <button class="modal-close" id="closeShortcutsModal" title="Close">×</button>
+        <h2>Keyboard Shortcuts</h2>
+        <div id="shortcutsList" class="shortcuts-list"></div>
+      </div>
+    </div>
   </div>
 
+  <!-- QR Code Library - loaded locally for offline support -->
+  <script src="js/qrcode.min.js"></script>
+  <script src="js/fabric.min.js"></script>
   <script src="js/printer_base.js" defer></script>
   <script src="js/marklife_p12.js" defer></script>
   <script src="js/printers_supported.js" defer></script>
-  <script src="js/fabric.min.js" defer></script>
   <script src="js/fabric_editor.js" defer></script>
   <script src="js/ui.js" defer></script>
   <script src="js/utils.js" defer></script>
   <script src="js/dithering.js" defer></script>
+  <script src="js/shortcuts.js" defer></script>
 </body>
 
 </html>

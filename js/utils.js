@@ -50,12 +50,39 @@ async function printLabel() {
       const printer = supportedPrinters.find(p => p.pattern.test(device.name));
       const infinitePaperCheckbox = document.getElementById("infinitePaperCheckbox");
       const isSegmented = infinitePaperCheckbox ? !infinitePaperCheckbox.checked : true; // Default to segmented if checkbox missing
+      const isInfinitePaper = infinitePaperCheckbox ? infinitePaperCheckbox.checked : false;
 
-      await printerInstance.print(device, constructBitmap(printer.px), isSegmented);
+      // Get copy count and spacing
+      const copyCountInput = document.getElementById("copyCount");
+      const copyCount = copyCountInput ? parseInt(copyCountInput.value) || 1 : 1;
+
+
+      // Loop to print each copy individually
+      for (let i = 0; i < copyCount; i++) {
+        log(`Printing copy ${i + 1} of ${copyCount}...`);
+
+        // Construct bitmap for a SINGLE copy
+        // We pass 1 as copyCount to constructBitmap so it generates just one label
+        // We preserve isInfinitePaper and spacingMm logic, though spacingMm mostly applies to the "gap" in the canvas method. 
+        // For separate print jobs, the printer's feed commands (in the class) handle the separation.
+        const bitmap = constructBitmap(printer.px, 1, isInfinitePaper);
+
+        if (bitmap) {
+          await printerInstance.print(device, bitmap, isSegmented);
+        }
+
+        // Add a small delay between copies to ensure printer processes the buffer
+        if (i < copyCount - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+
+      log("All copies printed successfully.");
     }
 
   } catch (err) {
     console.error("Print failed:", err);
+    log("Print failed: " + err);
   }
 }
 

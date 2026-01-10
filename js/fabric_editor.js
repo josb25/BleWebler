@@ -3,6 +3,22 @@ let fontSizeInput;
 let fontFamilyInput;
 let ditheringAlgorithmSelect; // New reference
 
+// Padding state (in pixels)
+let paddingState = {
+  top: 0,
+  bottom: 0,
+  left: 0,
+  right: 0
+};
+
+// Padding guide rectangles (for visual display)
+let paddingGuides = {
+  top: null,
+  bottom: null,
+  left: null,
+  right: null
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   canvas = new fabric.Canvas('fabricCanvas', {
     enableRetinaScaling: true,
@@ -16,7 +32,13 @@ document.addEventListener("DOMContentLoaded", () => {
   fontSizeInput = document.getElementById('fontSize');
   fontFamilyInput = document.getElementById('fontFamilyInput');
   ditheringAlgorithmSelect = document.getElementById('ditheringAlgorithmSelect'); // Initialize new reference
-
+  
+  // QR Code content input event listener
+  const qrContentInput = document.getElementById('qrContentInput');
+  if (qrContentInput) {
+    qrContentInput.addEventListener('change', updateQRCodeFromInput);
+    qrContentInput.addEventListener('blur', updateQRCodeFromInput);
+  }
 
   // Event listener for object selection to update UI controls
   canvas.on('selection:cleared', (e) => {
@@ -29,6 +51,96 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   canvas.on('selection:created', updateTextControls);
   canvas.on('object:modified', handleObjectModified); // Update controls when object is modified (e.g., scaled)
+  
+  // Constrain object scaling to stay within padding bounds
+  canvas.on('object:scaling', (e) => {
+    const obj = e.target;
+    const bounds = getPaddingBounds();
+    
+    // Get object dimensions after scaling
+    const objWidth = obj.getScaledWidth();
+    const objHeight = obj.getScaledHeight();
+    
+    // Constrain position if object would go outside bounds
+    let newLeft = obj.left;
+    let newTop = obj.top;
+    
+    // Left constraint
+    if (newLeft < bounds.left) {
+      newLeft = bounds.left;
+    }
+    // Right constraint
+    if (newLeft + objWidth > bounds.right) {
+      newLeft = bounds.right - objWidth;
+    }
+    // Top constraint
+    if (newTop < bounds.top) {
+      newTop = bounds.top;
+    }
+    // Bottom constraint
+    if (newTop + objHeight > bounds.bottom) {
+      newTop = bounds.bottom - objHeight;
+    }
+    
+    // If position needs adjustment, adjust scale instead to keep object within bounds
+    if (newLeft !== obj.left || newTop !== obj.top) {
+      // Calculate maximum allowed dimensions
+      const maxWidth = bounds.right - bounds.left;
+      const maxHeight = bounds.bottom - bounds.top;
+      
+      // Limit scale to fit within bounds
+      const scaleX = obj.scaleX;
+      const scaleY = obj.scaleY;
+      const baseWidth = obj.width;
+      const baseHeight = obj.height;
+      
+      const newScaleX = Math.min(scaleX, maxWidth / baseWidth);
+      const newScaleY = Math.min(scaleY, maxHeight / baseHeight);
+      
+      obj.set({
+        scaleX: newScaleX,
+        scaleY: newScaleY,
+        left: Math.max(bounds.left, Math.min(newLeft, bounds.right - obj.getScaledWidth())),
+        top: Math.max(bounds.top, Math.min(newTop, bounds.bottom - obj.getScaledHeight()))
+      });
+    }
+  });
+  
+  // Constrain object movement to stay within padding bounds
+  canvas.on('object:moving', (e) => {
+    const obj = e.target;
+    const bounds = getPaddingBounds();
+    
+    // Get object dimensions
+    const objWidth = obj.getScaledWidth();
+    const objHeight = obj.getScaledHeight();
+    
+    // Constrain position
+    let newLeft = obj.left;
+    let newTop = obj.top;
+    
+    // Left constraint
+    if (newLeft < bounds.left) {
+      newLeft = bounds.left;
+    }
+    // Right constraint
+    if (newLeft + objWidth > bounds.right) {
+      newLeft = bounds.right - objWidth;
+    }
+    // Top constraint
+    if (newTop < bounds.top) {
+      newTop = bounds.top;
+    }
+    // Bottom constraint
+    if (newTop + objHeight > bounds.bottom) {
+      newTop = bounds.bottom - objHeight;
+    }
+    
+    obj.set({
+      left: newLeft,
+      top: newTop
+    });
+  });
 
   // Event listeners for styling controls
   // fontSizeInput.addEventListener('change', applyTextProperties); // Handled in ui.js
@@ -76,11 +188,14 @@ document.addEventListener("DOMContentLoaded", () => {
               img.originalWidth = tempImage.width; // Store original width
               img.originalHeight = tempImage.height; // Store original height
 
+              const bounds = getPaddingBounds();
+              const contentHeight = bounds.bottom - bounds.top;
+              
               img.set({
                 scaleX: 1, // Image data is already scaled, so set base scale to 1
                 scaleY: 1, // Image data is already scaled, so set base scale to 1
-                left: 0, // Align to left
-                top: (canvasHeight - img.height) / 2, // Vertically center
+                left: bounds.left, // Align to left padding boundary
+                top: bounds.top + (contentHeight - img.height) / 2, // Vertically center within padding bounds
                 isUploadedImage: true
               }); canvas.add(img);
               canvas.setActiveObject(img);
@@ -158,8 +273,12 @@ function reDitherImageOnScale(fabricImageObject) {
 function addTextToCanvas() {
   const textContent = 'Type here';
 
+  const bounds = getPaddingBounds();
+  const contentWidth = bounds.right - bounds.left;
+  const contentHeight = bounds.bottom - bounds.top;
+
   const newText = new fabric.IText(textContent, {
-    left: 0,
+    left: bounds.left,
     fontFamily: fontFamilyInput.value || 'Arial', // Use fontFamilySelect
     fontSize: parseFloat(fontSizeInput.value) || 48,
     fill: '#000000',
@@ -169,10 +288,9 @@ function addTextToCanvas() {
     textBaseline: 'alphabetic', // Explicitly set a valid textBaseline
   });
 
-  // Center vertically
-  const canvasHeight = canvas.getHeight();
+  // Center vertically within padding bounds
   newText.set({
-    top: (canvasHeight - newText.getScaledHeight()) / 2
+    top: bounds.top + (contentHeight - newText.getScaledHeight()) / 2
   });
   canvas.add(newText);
   canvas.setActiveObject(newText);
@@ -190,6 +308,197 @@ function deleteSelectedObject() {
     canvas.renderAll();
     clearTextControls();
   }
+}
+
+function addQRCodeToCanvas() {
+  // Check if QRCode library is loaded
+  if (typeof QRCode === 'undefined') {
+    alert("QR code library failed to load. Please refresh the page.");
+    console.error('QRCode library not available');
+    return;
+  }
+
+  // Prompt user for QR code content
+  const qrContent = prompt("Enter text or URL for QR code:", "https://example.com");
+  if (!qrContent || qrContent.trim() === "") {
+    return;
+  }
+
+  // Create a temporary container for QR code generation
+  const tempDiv = document.createElement('div');
+  tempDiv.style.position = 'absolute';
+  tempDiv.style.left = '-9999px';
+  tempDiv.style.width = '200px';
+  tempDiv.style.height = '200px';
+  document.body.appendChild(tempDiv);
+
+  // Generate QR code using the library (this library uses constructor pattern)
+  const qrcode = new QRCode(tempDiv, {
+    text: qrContent,
+    width: 200,
+    height: 200,
+    colorDark: '#000000',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  // Wait a bit for the QR code to render, then get the image
+  setTimeout(() => {
+    // Get the canvas or image element from the QR code
+    const qrImg = tempDiv.querySelector('img');
+    const qrCanvas = tempDiv.querySelector('canvas');
+    
+    let imageSrc;
+    if (qrImg && qrImg.src) {
+      imageSrc = qrImg.src;
+    } else if (qrCanvas) {
+      imageSrc = qrCanvas.toDataURL('image/png');
+    } else {
+      // Fallback: try to get from SVG
+      const qrSvg = tempDiv.querySelector('svg');
+      if (qrSvg) {
+        const svgData = new XMLSerializer().serializeToString(qrSvg);
+        imageSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+      } else {
+        alert("Failed to generate QR code image.");
+        document.body.removeChild(tempDiv);
+        return;
+      }
+    }
+
+    // Add QR code image to canvas
+    fabric.Image.fromURL(imageSrc, function (img) {
+      const bounds = getPaddingBounds();
+      const contentWidth = bounds.right - bounds.left;
+      const contentHeight = bounds.bottom - bounds.top;
+      
+      // Scale QR code to fit within the padding bounds (max 80% of content area)
+      const maxWidth = contentWidth * 0.8;
+      const maxHeight = contentHeight * 0.8;
+      
+      // Calculate scale based on both width and height constraints
+      const scaleX = maxWidth / img.width;
+      const scaleY = maxHeight / img.height;
+      const scale = Math.min(scaleX, scaleY, 1); // Use the smaller scale to fit both dimensions
+      
+      const scaledWidth = img.width * scale;
+      const scaledHeight = img.height * scale;
+      
+      img.set({
+        scaleX: scale,
+        scaleY: scale,
+        left: bounds.left + (contentWidth - scaledWidth) / 2, // Center horizontally within padding bounds
+        top: bounds.top + (contentHeight - scaledHeight) / 2, // Center vertically within padding bounds
+        isQRCode: true,
+        qrContent: qrContent // Store the content for potential re-editing
+      });
+      
+      canvas.add(img);
+      canvas.setActiveObject(img);
+      canvas.renderAll();
+      
+      // Clean up temporary div
+      document.body.removeChild(tempDiv);
+    }, {
+      crossOrigin: 'anonymous'
+    });
+  }, 100);
+}
+
+// Function to update QR code content while maintaining position and size
+function updateQRCodeFromInput() {
+  const activeObject = canvas.getActiveObject();
+  if (!activeObject || !activeObject.isQRCode) return;
+  
+  const qrContentInput = document.getElementById('qrContentInput');
+  if (!qrContentInput) return;
+  
+  const newContent = qrContentInput.value.trim();
+  if (!newContent || newContent === activeObject.qrContent) return;
+  
+  // Check if QRCode library is loaded
+  if (typeof QRCode === 'undefined') {
+    alert("QR code library failed to load. Please refresh the page.");
+    return;
+  }
+  
+  // Store current position and size
+  const currentLeft = activeObject.left;
+  const currentTop = activeObject.top;
+  const currentScaleX = activeObject.scaleX;
+  const currentScaleY = activeObject.scaleY;
+  const currentAngle = activeObject.angle || 0;
+  
+  // Create a temporary container for QR code generation
+  const tempDiv = document.createElement('div');
+  tempDiv.style.position = 'absolute';
+  tempDiv.style.left = '-9999px';
+  tempDiv.style.width = '200px';
+  tempDiv.style.height = '200px';
+  document.body.appendChild(tempDiv);
+  
+  // Generate new QR code
+  const qrcode = new QRCode(tempDiv, {
+    text: newContent,
+    width: 200,
+    height: 200,
+    colorDark: '#000000',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  
+  // Wait for QR code to render
+  setTimeout(() => {
+    const qrImg = tempDiv.querySelector('img');
+    const qrCanvas = tempDiv.querySelector('canvas');
+    
+    let imageSrc;
+    if (qrImg && qrImg.src) {
+      imageSrc = qrImg.src;
+    } else if (qrCanvas) {
+      imageSrc = qrCanvas.toDataURL('image/png');
+    } else {
+      const qrSvg = tempDiv.querySelector('svg');
+      if (qrSvg) {
+        const svgData = new XMLSerializer().serializeToString(qrSvg);
+        imageSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+      } else {
+        alert("Failed to generate QR code image.");
+        document.body.removeChild(tempDiv);
+        return;
+      }
+    }
+    
+    // Replace the QR code image while maintaining position and size
+    fabric.Image.fromURL(imageSrc, function (newImg) {
+      // Calculate the scale to match the original size
+      const originalScaledWidth = activeObject.getScaledWidth();
+      const originalScaledHeight = activeObject.getScaledHeight();
+      const newScaleX = originalScaledWidth / newImg.width;
+      const newScaleY = originalScaledHeight / newImg.height;
+      
+      newImg.set({
+        scaleX: newScaleX,
+        scaleY: newScaleY,
+        left: currentLeft,
+        top: currentTop,
+        angle: currentAngle,
+        isQRCode: true,
+        qrContent: newContent
+      });
+      
+      // Replace the old QR code with the new one
+      canvas.remove(activeObject);
+      canvas.add(newImg);
+      canvas.setActiveObject(newImg);
+      canvas.renderAll();
+      
+      // Clean up temporary div
+      document.body.removeChild(tempDiv);
+    }, {
+      crossOrigin: 'anonymous'
+    });
+  }, 100);
 }
 
 function applyTextProperties() {
@@ -216,6 +525,7 @@ function updateTextControls() {
   const textFormatGroup = document.getElementById('text-format-group');
   const alignmentGroup = document.getElementById('alignment-group');
   const imageControlsGroup = document.getElementById('image-controls-group');
+  const qrControlsGroup = document.getElementById('qr-controls-group');
   const objectSpecificControlsBox = document.getElementById('object-specific-controls');
 
   // Groups that are object-specific styling controls
@@ -227,6 +537,7 @@ function updateTextControls() {
     if (group) group.style.display = 'none';
   });
   if (imageStylingGroup) imageStylingGroup.style.display = 'none';
+  if (qrControlsGroup) qrControlsGroup.style.display = 'none';
 
   // The general controls (text input, alignment) are always visible based on the HTML structure.
 
@@ -252,20 +563,42 @@ function updateTextControls() {
         button.classList.toggle('active', isActive);
       });
     } else if (activeObject.type === 'image') {
-      // Show image styling group
-      if (imageStylingGroup) imageStylingGroup.style.display = 'flex';
+      // Check if it's a QR code
+      if (activeObject.isQRCode) {
+        // Show QR controls ONLY when QR code is selected
+        if (qrControlsGroup) {
+          qrControlsGroup.style.display = 'flex';
+          const qrContentInput = document.getElementById('qrContentInput');
+          if (qrContentInput) {
+            qrContentInput.value = activeObject.qrContent || '';
+          }
+        }
+        // Make sure image controls are hidden
+        if (imageStylingGroup) imageStylingGroup.style.display = 'none';
+      } else {
+        // Show image styling group for regular images
+        if (imageStylingGroup) imageStylingGroup.style.display = 'flex';
+        // Make sure QR controls are hidden
+        if (qrControlsGroup) qrControlsGroup.style.display = 'none';
 
-      if (ditheringAlgorithmSelect) {
-        if (activeObject.ditheringAlgorithm) {
-          ditheringAlgorithmSelect.value = activeObject.ditheringAlgorithm;
-        } else {
-          ditheringAlgorithmSelect.value = 'none';
+        if (ditheringAlgorithmSelect) {
+          if (activeObject.ditheringAlgorithm) {
+            ditheringAlgorithmSelect.value = activeObject.ditheringAlgorithm;
+          } else {
+            ditheringAlgorithmSelect.value = 'none';
+          }
         }
       }
+    } else {
+      // Not text or image, hide all controls
+      if (qrControlsGroup) qrControlsGroup.style.display = 'none';
+      if (imageStylingGroup) imageStylingGroup.style.display = 'none';
     }
   } else {
-    // No object selected, hide the object-specific box
+    // No object selected, hide the object-specific box and all controls
     if (objectSpecificControlsBox) objectSpecificControlsBox.style.display = 'none';
+    if (qrControlsGroup) qrControlsGroup.style.display = 'none';
+    if (imageStylingGroup) imageStylingGroup.style.display = 'none';
 
     // Ensure controls are reset
     clearTextControls();
@@ -335,7 +668,8 @@ window.fabricEditor = {
     const activeObject = canvas.getActiveObject();
     if (!activeObject) return;
 
-    const canvasWidth = canvas.getWidth();
+    const bounds = getPaddingBounds();
+    const contentWidth = bounds.right - bounds.left;
     let objectWidth;
     let newLeft;
 
@@ -349,16 +683,16 @@ window.fabricEditor = {
       return; // Not a text or image object, do nothing
     }
 
-    // Adjust the object's left position to align it within the canvas
+    // Adjust the object's left position to align it within the padding bounds
     switch (alignment) {
       case 'left':
-        newLeft = 0; // Align to left edge of canvas
+        newLeft = bounds.left; // Align to left padding boundary
         break;
       case 'center':
-        newLeft = (canvasWidth - objectWidth) / 2; // Center horizontally
+        newLeft = bounds.left + (contentWidth - objectWidth) / 2; // Center within padding bounds
         break;
       case 'right':
-        newLeft = canvasWidth - objectWidth; // Align to right edge of canvas
+        newLeft = bounds.right - objectWidth; // Align to right padding boundary
         break;
       default:
         return;
@@ -371,7 +705,8 @@ window.fabricEditor = {
     const activeObject = canvas.getActiveObject();
     if (!activeObject) return;
 
-    const canvasHeight = canvas.getHeight();
+    const bounds = getPaddingBounds();
+    const contentHeight = bounds.bottom - bounds.top;
     let objectHeight;
     let newTop;
 
@@ -385,13 +720,13 @@ window.fabricEditor = {
 
     switch (alignment) {
       case 'top':
-        newTop = 0; // Align to top of canvas
+        newTop = bounds.top; // Align to top padding boundary
         break;
       case 'middle':
-        newTop = (canvasHeight - objectHeight) / 2; // Center vertically
+        newTop = bounds.top + (contentHeight - objectHeight) / 2; // Center within padding bounds
         break;
       case 'bottom':
-        newTop = canvasHeight - objectHeight; // Align to bottom of canvas
+        newTop = bounds.bottom - objectHeight; // Align to bottom padding boundary
         break;
       default:
         return;
@@ -451,7 +786,116 @@ window.fabricEditor = {
     if (canvas) {
       canvas.setWidth(width);
       canvas.setHeight(height);
+      updatePaddingGuides();
       canvas.renderAll();
     }
+  },
+  
+  setPadding: function (top, bottom, left, right) {
+    paddingState.top = top;
+    paddingState.bottom = bottom;
+    paddingState.left = left;
+    paddingState.right = right;
+    updatePaddingGuides();
+    canvas.renderAll();
+  },
+  
+  getPaddingBounds: function () {
+    return getPaddingBounds();
   }
 };
+
+// Helper function to get padding bounds in pixels
+function getPaddingBounds() {
+  const canvasWidth = canvas.getWidth();
+  const canvasHeight = canvas.getHeight();
+  
+  return {
+    left: paddingState.left,
+    top: paddingState.top,
+    right: canvasWidth - paddingState.right,
+    bottom: canvasHeight - paddingState.bottom
+  };
+}
+
+// Update visual padding guides on canvas
+function updatePaddingGuides() {
+  const canvasWidth = canvas.getWidth();
+  const canvasHeight = canvas.getHeight();
+  
+  // Remove existing guides
+  Object.values(paddingGuides).forEach(guide => {
+    if (guide) {
+      canvas.remove(guide);
+    }
+  });
+  
+  // Only show guides if padding is set
+  if (paddingState.top === 0 && paddingState.bottom === 0 && 
+      paddingState.left === 0 && paddingState.right === 0) {
+    return;
+  }
+  
+  // Create guide rectangles (semi-transparent overlays)
+  const guideOptions = {
+    fill: 'rgba(255, 0, 0, 0.1)',
+    stroke: 'rgba(255, 0, 0, 0.3)',
+    strokeWidth: 1,
+    selectable: false,
+    evented: false,
+    excludeFromExport: true,
+    paddingGuide: true
+  };
+  
+  // Top padding guide
+  if (paddingState.top > 0) {
+    paddingGuides.top = new fabric.Rect({
+      left: 0,
+      top: 0,
+      width: canvasWidth,
+      height: paddingState.top,
+      ...guideOptions
+    });
+    canvas.add(paddingGuides.top);
+    canvas.sendToBack(paddingGuides.top);
+  }
+  
+  // Bottom padding guide
+  if (paddingState.bottom > 0) {
+    paddingGuides.bottom = new fabric.Rect({
+      left: 0,
+      top: canvasHeight - paddingState.bottom,
+      width: canvasWidth,
+      height: paddingState.bottom,
+      ...guideOptions
+    });
+    canvas.add(paddingGuides.bottom);
+    canvas.sendToBack(paddingGuides.bottom);
+  }
+  
+  // Left padding guide
+  if (paddingState.left > 0) {
+    paddingGuides.left = new fabric.Rect({
+      left: 0,
+      top: paddingState.top,
+      width: paddingState.left,
+      height: canvasHeight - paddingState.top - paddingState.bottom,
+      ...guideOptions
+    });
+    canvas.add(paddingGuides.left);
+    canvas.sendToBack(paddingGuides.left);
+  }
+  
+  // Right padding guide
+  if (paddingState.right > 0) {
+    paddingGuides.right = new fabric.Rect({
+      left: canvasWidth - paddingState.right,
+      top: paddingState.top,
+      width: paddingState.right,
+      height: canvasHeight - paddingState.top - paddingState.bottom,
+      ...guideOptions
+    });
+    canvas.add(paddingGuides.right);
+    canvas.sendToBack(paddingGuides.right);
+  }
+}
