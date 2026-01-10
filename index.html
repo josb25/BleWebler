@@ -255,11 +255,103 @@
             </div>
           </div>
 
-          <div id="qr-controls-group" class="control-group" style="display: none;">
-            <label for="qrContentInput"
-              style="font-weight: 500; font-size: 0.9rem; margin-bottom: var(--spacing-xs); display: block;">QR Code
-              Content:</label>
-            <input type="text" id="qrContentInput" placeholder="Enter text or URL for QR code" class="flex-grow" />
+          <div id="qr-controls-group" class="control-group"
+            style="display: none; flex-direction: column; gap: var(--spacing-md);">
+            <!-- Type Selector -->
+            <div class="form-group-modern">
+              <label for="qrTypeSelect" class="input-label">QR Code Type</label>
+              <select id="qrTypeSelect" class="flex-grow">
+                <option value="text">Text / URL</option>
+                <option value="wifi">Wi-Fi Network</option>
+                <option value="contact">Contact (vCard)</option>
+                <option value="phone">Phone Number</option>
+                <option value="sms">SMS Message</option>
+                <option value="email">Email</option>
+                <option value="geo">Location</option>
+                <option value="calendar">Calendar Event</option>
+              </select>
+            </div>
+
+            <!-- Text / URL -->
+            <div id="qr-section-text" class="qr-section">
+              <input type="text" id="qrContentInput" placeholder="Enter text or URL" class="input-modern" />
+            </div>
+
+            <!-- Wi-Fi -->
+            <div id="qr-section-wifi" class="qr-section" style="display: none;">
+              <div class="input-grid">
+                <input type="text" id="qrWifiSsid" placeholder="Network Name (SSID)" class="input-modern" />
+                <select id="qrWifiEncryption" class="input-modern">
+                  <option value="WPA">WPA/WPA2</option>
+                  <option value="WEP">WEP</option>
+                  <option value="nopass">No Password</option>
+                </select>
+              </div>
+              <input type="text" id="qrWifiPassword" placeholder="Password" class="input-modern" />
+              <label class="checkbox-container">
+                <input type="checkbox" id="qrWifiHidden" />
+                <span class="checkbox-text">Hidden Network</span>
+              </label>
+            </div>
+
+            <!-- Contact (vCard) -->
+            <div id="qr-section-contact" class="qr-section" style="display: none;">
+              <div class="input-grid">
+                <input type="text" id="qrContactName" placeholder="Full Name" class="input-modern" />
+                <input type="text" id="qrContactOrg" placeholder="Company" class="input-modern" />
+              </div>
+              <div class="input-grid">
+                <input type="text" id="qrContactTitle" placeholder="Job Title" class="input-modern" />
+                <input type="tel" id="qrContactPhone" placeholder="Phone" class="input-modern" />
+              </div>
+              <input type="email" id="qrContactEmail" placeholder="Email Address" class="input-modern" />
+              <input type="text" id="qrContactUrl" placeholder="Website URL" class="input-modern" />
+              <textarea id="qrContactAddress" placeholder="Physical Address" class="input-modern" rows="2"></textarea>
+            </div>
+
+            <!-- Phone -->
+            <div id="qr-section-phone" class="qr-section" style="display: none;">
+              <input type="tel" id="qrPhone" placeholder="Phone Number (e.g., +1234567890)" class="input-modern" />
+            </div>
+
+            <!-- SMS -->
+            <div id="qr-section-sms" class="qr-section" style="display: none;">
+              <input type="tel" id="qrSmsPhone" placeholder="Recipient Number" class="input-modern" />
+              <textarea id="qrSmsMessage" placeholder="Message Text" class="input-modern" rows="3"></textarea>
+            </div>
+
+            <!-- Email -->
+            <div id="qr-section-email" class="qr-section" style="display: none;">
+              <input type="email" id="qrEmailTo" placeholder="Recipient Email" class="input-modern" />
+              <input type="text" id="qrEmailSubject" placeholder="Subject" class="input-modern" />
+              <textarea id="qrEmailBody" placeholder="Message Body" class="input-modern" rows="4"></textarea>
+            </div>
+
+            <!-- Geolocator -->
+            <div id="qr-section-geo" class="qr-section" style="display: none;">
+              <div class="input-grid">
+                <input type="number" id="qrGeoLat" placeholder="Latitude" class="input-modern" step="any" />
+                <input type="number" id="qrGeoLong" placeholder="Longitude" class="input-modern" step="any" />
+              </div>
+              <p class="helper-text">Enter coordinates (e.g., 40.7128, -74.0060)</p>
+            </div>
+
+            <!-- Calendar -->
+            <div id="qr-section-calendar" class="qr-section" style="display: none;">
+              <input type="text" id="qrCalSummary" placeholder="Event Title" class="input-modern" />
+              <div class="input-grid">
+                <div class="date-group">
+                  <label>Start</label>
+                  <input type="datetime-local" id="qrCalStart" class="input-modern" />
+                </div>
+                <div class="date-group">
+                  <label>End</label>
+                  <input type="datetime-local" id="qrCalEnd" class="input-modern" />
+                </div>
+              </div>
+              <input type="text" id="qrCalLocation" placeholder="Location" class="input-modern" />
+              <textarea id="qrCalDesc" placeholder="Description" class="input-modern" rows="2"></textarea>
+            </div>
           </div>
 
           <div id="image-controls-group" class="control-group"

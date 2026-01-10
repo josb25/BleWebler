@@ -138,7 +138,7 @@ body {
     background-color: #78350f;
     border-color: #f59e0b;
   }
-  
+
   .warning-banner span {
     color: #fbbf24;
   }
@@ -165,13 +165,15 @@ header {
 
 .header-left {
   flex: 0 0 auto;
-  width: 100px; /* Match button width to center title */
+  width: 100px;
+  /* Match button width to center title */
 }
 
 .header-center {
   flex: 1;
   text-align: center;
-  min-width: 0; /* Allow shrinking */
+  min-width: 0;
+  /* Allow shrinking */
 }
 
 .header-right {
@@ -179,7 +181,8 @@ header {
   display: flex;
   gap: var(--spacing-sm);
   align-items: center;
-  width: 100px; /* Match left side for centering */
+  width: 100px;
+  /* Match left side for centering */
   justify-content: flex-end;
 }
 
@@ -776,4 +779,107 @@ input:checked+.slider:before {
   background-color: var(--bg-card);
   color: var(--text-main);
   font-size: 14px;
+}
+
+/* =========================================
+   Modern QR UI Styles
+   ========================================= */
+
+.form-group-modern {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+}
+
+.input-label {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-main);
+}
+
+.qr-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.input-modern {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  line-height: 1.5;
+}
+
+.input-modern:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.input-modern::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+.helper-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-text {
+  font-size: 0.875rem;
+  color: var(--text-main);
+}
+
+.date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.date-group label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* Specific Tweak for Textarea */
+textarea.input-modern {
+  resize: vertical;
+  min-height: 2.5rem;
 }

@@ -19,6 +19,8 @@ let paddingGuides = {
   right: null
 };
 
+let qrUpdateTimer = null; // Debounce timer for QR updates
+
 document.addEventListener("DOMContentLoaded", () => {
   canvas = new fabric.Canvas('fabricCanvas', {
     enableRetinaScaling: true,
@@ -35,9 +37,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // QR Code content input event listener
   const qrContentInput = document.getElementById('qrContentInput');
-  if (qrContentInput) {
-    qrContentInput.addEventListener('change', updateQRCodeFromInput);
-    qrContentInput.addEventListener('blur', updateQRCodeFromInput);
+  const qrTypeSelect = document.getElementById('qrTypeSelect');
+
+  // Sections
+  const qrSectionText = document.getElementById('qr-section-text');
+  const qrSectionWifi = document.getElementById('qr-section-wifi');
+  const qrSectionContact = document.getElementById('qr-section-contact');
+  const qrSectionPhone = document.getElementById('qr-section-phone');
+  const qrSectionSms = document.getElementById('qr-section-sms');
+  const qrSectionEmail = document.getElementById('qr-section-email');
+  const qrSectionGeo = document.getElementById('qr-section-geo');
+  const qrSectionCalendar = document.getElementById('qr-section-calendar');
+
+  const sections = {
+    text: qrSectionText,
+    wifi: qrSectionWifi,
+    contact: qrSectionContact,
+    phone: qrSectionPhone,
+    sms: qrSectionSms,
+    email: qrSectionEmail,
+    geo: qrSectionGeo,
+    calendar: qrSectionCalendar
+  };
+
+  // Inputs
+  const inputsToMonitor = [
+    'qrContentInput',
+    'qrWifiSsid', 'qrWifiPassword', 'qrWifiEncryption', 'qrWifiHidden',
+    'qrContactName', 'qrContactOrg', 'qrContactTitle', 'qrContactPhone', 'qrContactEmail', 'qrContactUrl', 'qrContactAddress',
+    'qrPhone',
+    'qrSmsPhone', 'qrSmsMessage',
+    'qrEmailTo', 'qrEmailSubject', 'qrEmailBody',
+    'qrGeoLat', 'qrGeoLong',
+    'qrCalSummary', 'qrCalStart', 'qrCalEnd', 'qrCalLocation', 'qrCalDesc'
+  ];
+
+  inputsToMonitor.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', updateQRCodeFromInput);
+      el.addEventListener('change', updateQRCodeFromInput);
+    }
+  });
+
+  // Event listeners for QR Type
+  if (qrTypeSelect) {
+    qrTypeSelect.addEventListener('change', () => {
+      const type = qrTypeSelect.value;
+      // Hide all first
+      Object.values(sections).forEach(s => { if (s) s.style.display = 'none'; });
+      // Show selected
+      if (sections[type]) sections[type].style.display = (type === 'wifi' || type === 'contact' || type === 'sms' || type === 'email' || type === 'geo' || type === 'calendar' || type === 'phone') ? 'flex' : 'block';
+
+      updateQRCodeFromInput();
+    });
   }
 
   // Event listener for object selection to update UI controls
@@ -51,6 +104,50 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   canvas.on('selection:created', updateTextControls);
   canvas.on('object:modified', handleObjectModified); // Update controls when object is modified (e.g., scaled)
+
+  // Double-click to focus input
+  canvas.on('mouse:dblclick', (e) => {
+    if (e.target && e.target.isQRCode) {
+      const typeSelect = document.getElementById('qrTypeSelect');
+      const type = typeSelect ? typeSelect.value : 'text';
+      let inputToFocus = null;
+
+      switch (type) {
+        case 'wifi':
+          inputToFocus = document.getElementById('qrWifiSsid');
+          break;
+        case 'contact':
+          inputToFocus = document.getElementById('qrContactName');
+          break;
+        case 'phone':
+          inputToFocus = document.getElementById('qrPhone');
+          break;
+        case 'sms':
+          inputToFocus = document.getElementById('qrSmsPhone');
+          break;
+        case 'email':
+          inputToFocus = document.getElementById('qrEmailTo');
+          break;
+        case 'geo':
+          inputToFocus = document.getElementById('qrGeoLat');
+          break;
+        case 'calendar':
+          inputToFocus = document.getElementById('qrCalSummary');
+          break;
+        case 'text':
+        default:
+          inputToFocus = document.getElementById('qrContentInput');
+          break;
+      }
+
+      if (inputToFocus) {
+        inputToFocus.focus();
+        if (inputToFocus.select) {
+          inputToFocus.select();
+        }
+      }
+    }
+  });
 
   // Constrain object scaling to stay within padding bounds
   canvas.on('object:scaling', (e) => {
@@ -339,10 +436,8 @@ function addQRCodeToCanvas() {
   }
 
   // Prompt user for QR code content
-  const qrContent = prompt("Enter text or URL for QR code:", "https://example.com");
-  if (!qrContent || qrContent.trim() === "") {
-    return;
-  }
+  // Default content for new QR code
+  const qrContent = "https://example.com";
 
   // Create a temporary container for QR code generation
   const tempDiv = document.createElement('div');
@@ -451,107 +546,202 @@ function updateQRCodeFromInput() {
   const activeObject = canvas.getActiveObject();
   if (!activeObject || !activeObject.isQRCode) return;
 
-  const qrContentInput = document.getElementById('qrContentInput');
-  if (!qrContentInput) return;
+  const qrTypeSelect = document.getElementById('qrTypeSelect');
+  let newContent = "";
 
-  const newContent = qrContentInput.value.trim();
-  if (!newContent || newContent === activeObject.qrContent) return;
+  if (qrTypeSelect) {
+    const type = qrTypeSelect.value;
+    if (type === 'wifi') {
+      const ssid = document.getElementById('qrWifiSsid').value || '';
+      const pass = document.getElementById('qrWifiPassword').value || '';
+      const enc = document.getElementById('qrWifiEncryption').value || 'WPA';
+      const hidden = document.getElementById('qrWifiHidden').checked;
+      const escapeWifi = (str) => str.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/:/g, '\\:');
 
-  // Check if QRCode library is loaded
-  if (typeof QRCode === 'undefined') {
-    alert("QR code library failed to load. Please refresh the page.");
-    return;
-  }
-
-  // Store current position and size
-  const currentLeft = activeObject.left;
-  const currentTop = activeObject.top;
-  const currentScaleX = activeObject.scaleX;
-  const currentScaleY = activeObject.scaleY;
-  const currentAngle = activeObject.angle || 0;
-
-  // Create a temporary container for QR code generation
-  const tempDiv = document.createElement('div');
-  tempDiv.style.position = 'absolute';
-  tempDiv.style.left = '-9999px';
-  tempDiv.style.width = '200px';
-  tempDiv.style.height = '200px';
-  document.body.appendChild(tempDiv);
-
-  // Generate new QR code
-  const qrcode = new QRCode(tempDiv, {
-    text: newContent,
-    width: 200,
-    height: 200,
-    colorDark: '#000000',
-    colorLight: '#FFFFFF',
-    correctLevel: QRCode.CorrectLevel.H
-  });
-
-  // Capture module count for snapping
-  let moduleCount = 21; // Default fallback
-  if (qrcode._oQRCode && qrcode._oQRCode.moduleCount) {
-    moduleCount = qrcode._oQRCode.moduleCount;
-  }
-
-  // Wait for QR code to render
-  setTimeout(() => {
-    const qrImg = tempDiv.querySelector('img');
-    const qrCanvas = tempDiv.querySelector('canvas');
-
-    let imageSrc;
-    if (qrImg && qrImg.src) {
-      imageSrc = qrImg.src;
-    } else if (qrCanvas) {
-      imageSrc = qrCanvas.toDataURL('image/png');
-    } else {
-      const qrSvg = tempDiv.querySelector('svg');
-      if (qrSvg) {
-        const svgData = new XMLSerializer().serializeToString(qrSvg);
-        imageSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+      if (ssid) {
+        newContent = `WIFI:T:${enc};S:${escapeWifi(ssid)};P:${escapeWifi(pass)};H:${hidden};;`;
       } else {
-        alert("Failed to generate QR code image.");
-        document.body.removeChild(tempDiv);
-        return;
+        newContent = activeObject.qrContent;
+      }
+    } else if (type === 'contact') {
+      // vCard 3.0
+      const n = document.getElementById('qrContactName').value || '';
+      const org = document.getElementById('qrContactOrg').value || '';
+      const title = document.getElementById('qrContactTitle').value || '';
+      const tel = document.getElementById('qrContactPhone').value || '';
+      const email = document.getElementById('qrContactEmail').value || '';
+      const url = document.getElementById('qrContactUrl').value || '';
+      const adr = document.getElementById('qrContactAddress').value || '';
+
+      if (n || org || title || tel || email || url || adr) {
+        newContent = `BEGIN:VCARD\nVERSION:3.0\nN:${n}\nFN:${n}\nORG:${org}\nTITLE:${title}\nTEL:${tel}\nEMAIL:${email}\nURL:${url}\nADR:${adr}\nEND:VCARD`;
+      } else {
+        newContent = activeObject.qrContent;
+      }
+    } else if (type === 'phone') {
+      const tel = document.getElementById('qrPhone').value || '';
+      newContent = tel ? `tel:${tel}` : activeObject.qrContent;
+    } else if (type === 'sms') {
+      const tel = document.getElementById('qrSmsPhone').value || '';
+      const msg = document.getElementById('qrSmsMessage').value || '';
+      newContent = tel ? `SMSTO:${tel}:${msg}` : activeObject.qrContent;
+    } else if (type === 'email') {
+      const to = document.getElementById('qrEmailTo').value || '';
+      const sub = document.getElementById('qrEmailSubject').value || '';
+      const body = document.getElementById('qrEmailBody').value || '';
+      if (to) {
+        newContent = `mailto:${to}?subject=${encodeURIComponent(sub)}&body=${encodeURIComponent(body)}`;
+      } else {
+        newContent = activeObject.qrContent;
+      }
+    } else if (type === 'geo') {
+      const lat = document.getElementById('qrGeoLat').value || '';
+      const long = document.getElementById('qrGeoLong').value || '';
+      newContent = (lat && long) ? `geo:${lat},${long}` : activeObject.qrContent;
+    } else if (type === 'calendar') {
+      const sum = document.getElementById('qrCalSummary').value || '';
+      const start = document.getElementById('qrCalStart').value || ''; // yyyy-MM-ddThh:mm
+      const end = document.getElementById('qrCalEnd').value || '';
+      const loc = document.getElementById('qrCalLocation').value || '';
+      const desc = document.getElementById('qrCalDesc').value || '';
+
+      if (sum && start && end) {
+        const formatTime = (iso) => iso.replace(/[-:]/g, '') + "00";
+        newContent = `BEGIN:VEVENT\nSUMMARY:${sum}\nDTSTART:${formatTime(start)}\nDTEND:${formatTime(end)}\nLOCATION:${loc}\nDESCRIPTION:${desc}\nEND:VEVENT`;
+      } else {
+        newContent = activeObject.qrContent;
+      }
+    } else {
+      // Text Mode
+      const qrContentInput = document.getElementById('qrContentInput');
+      if (qrContentInput) {
+        newContent = qrContentInput.value.trim();
       }
     }
+  }
 
-    // Replace the QR code image while maintaining position and size
-    fabric.Image.fromURL(imageSrc, function (newImg) {
-      // Logic to maintain size but snap to new module count
-      const originalScaledWidth = activeObject.getScaledWidth();
+  if (!newContent || newContent === activeObject.qrContent) return;
 
-      // Try to keep similar physical size, but snap to new module count
-      let idealModuleSizePixels = Math.round(originalScaledWidth / moduleCount);
-      if (idealModuleSizePixels < 1) idealModuleSizePixels = 1;
+  // Debounce the update
+  if (qrUpdateTimer) {
+    clearTimeout(qrUpdateTimer);
+  }
 
-      const targetDimension = idealModuleSizePixels * moduleCount;
-      const newScale = targetDimension / newImg.width;
+  qrUpdateTimer = setTimeout(() => {
+    // Check if QRCode library is loaded
+    if (typeof QRCode === 'undefined') {
+      alert("QR code library failed to load. Please refresh the page.");
+      return;
+    }
 
-      newImg.set({
-        scaleX: newScale, // Snap scale
-        scaleY: newScale, // Snap scale
-        left: currentLeft,
-        top: currentTop,
-        angle: currentAngle,
-        isQRCode: true,
-        qrContent: newContent,
-        qrModuleCount: moduleCount,
-        lockUniScaling: true
-      });
+    // Capture activeObject again inside timeout to ensure it's still valid/selected
+    // Actually, we should probably stick to the one we checked outside, OR re-check.
+    // If user changed selection during debounce, we probably shouldn't update the OLD selection unless we tracked it.
+    // But since `updateQRCodeFromInput` is driven by global inputs that adhere to the *currently* active object (via UI updates), 
+    // it is safer to re-check specific object validity or just target `activeObject` caught in closure if we want to be sure.
+    // However, if selection changed, the inputs would have been updated to the new selection's values.
+    // Let's re-acquire active object to be safe and ensure we are modifying what the user thinks they are modifying.
+    const currentActive = canvas.getActiveObject();
+    if (!currentActive || !currentActive.isQRCode) return; // Abort if selection changed
 
-      // Replace the old QR code with the new one
-      canvas.remove(activeObject);
-      canvas.add(newImg);
-      canvas.setActiveObject(newImg);
-      canvas.renderAll();
+    // Store current position and size
+    const currentLeft = currentActive.left;
+    const currentTop = currentActive.top;
+    const currentScaleX = currentActive.scaleX;
+    const currentScaleY = currentActive.scaleY;
+    const currentAngle = currentActive.angle || 0;
 
-      // Clean up temporary div
-      document.body.removeChild(tempDiv);
-    }, {
-      crossOrigin: 'anonymous'
+    // Create a temporary container for QR code generation
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.width = '200px';
+    tempDiv.style.height = '200px';
+    document.body.appendChild(tempDiv);
+
+    // Generate new QR code
+    const qrcode = new QRCode(tempDiv, {
+      text: newContent,
+      width: 200,
+      height: 200,
+      colorDark: '#000000',
+      colorLight: '#FFFFFF',
+      correctLevel: QRCode.CorrectLevel.H
     });
-  }, 100);
+
+    // Capture module count for snapping
+    let moduleCount = 21; // Default fallback
+    if (qrcode._oQRCode && qrcode._oQRCode.moduleCount) {
+      moduleCount = qrcode._oQRCode.moduleCount;
+    }
+
+    // Wait for QR code to render
+    setTimeout(() => {
+      const qrImg = tempDiv.querySelector('img');
+      const qrCanvas = tempDiv.querySelector('canvas');
+
+      let imageSrc;
+      if (qrImg && qrImg.src) {
+        imageSrc = qrImg.src;
+      } else if (qrCanvas) {
+        imageSrc = qrCanvas.toDataURL('image/png');
+      } else {
+        const qrSvg = tempDiv.querySelector('svg');
+        if (qrSvg) {
+          const svgData = new XMLSerializer().serializeToString(qrSvg);
+          imageSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        } else {
+          // Failure
+          document.body.removeChild(tempDiv);
+          return;
+        }
+      }
+
+      // Update the existing object source
+      currentActive.setSrc(imageSrc, function () {
+        // Logic to maintain size but snap to new module count
+        // Note: currentActive.width might have been reset by setSrc to the new image natural width (200)
+
+        // Calculate scale based on module count to snap to integer pixels
+        // We want to keep the object roughly the same physical size on the canvas
+        // Visual Size = currentActive.getScaledWidth();
+        // Since we just called setSrc, fabric might have reset scale to 1 or changed width.
+        // Actually setSrc resets width/height to new image dims, and usually resets scale unless we re-apply it.
+
+        // Let's rely on `currentActive.getScaledWidth()` BUT we need to know what it was *before* we called setSrc.
+        // We captured `currentScaleX`. And we assume previous natural width was 200 (since we generate 200x200).
+        // If previous natural width was different, we might drift. 
+        // But we always generate 200x200 here.
+
+        const previousVisualWidth = currentScaleX * (currentActive.width || 200); // approximate if width changed already?
+        // Wait, setSrc callback: `this` is the object. `this.width` is new width (200).
+
+        let idealModuleSizePixels = Math.round(previousVisualWidth / moduleCount);
+        if (idealModuleSizePixels < 1) idealModuleSizePixels = 1;
+
+        const targetDimension = idealModuleSizePixels * moduleCount;
+        const newScale = targetDimension / currentActive.width;
+
+        currentActive.set({
+          scaleX: newScale,
+          scaleY: newScale,
+          left: currentLeft,
+          top: currentTop,
+          angle: currentAngle,
+          qrContent: newContent,
+          qrModuleCount: moduleCount,
+          dirty: true
+        });
+
+        currentActive.setCoords();
+        canvas.renderAll();
+
+        // Clean up temporary div
+        document.body.removeChild(tempDiv);
+      }); // end setSrc
+
+    }, 50); // inner timeout for rendering
+  }, 300); // debounce delay
 }
 
 function applyTextProperties() {
@@ -621,9 +811,93 @@ function updateTextControls() {
         // Show QR controls ONLY when QR code is selected
         if (qrControlsGroup) {
           qrControlsGroup.style.display = 'flex';
-          const qrContentInput = document.getElementById('qrContentInput');
-          if (qrContentInput) {
-            qrContentInput.value = activeObject.qrContent || '';
+
+          const content = activeObject.qrContent || '';
+
+          const qrTypeSelect = document.getElementById('qrTypeSelect');
+          const sections = {
+            text: document.getElementById('qr-section-text'),
+            wifi: document.getElementById('qr-section-wifi'),
+            contact: document.getElementById('qr-section-contact'),
+            phone: document.getElementById('qr-section-phone'),
+            sms: document.getElementById('qr-section-sms'),
+            email: document.getElementById('qr-section-email'),
+            geo: document.getElementById('qr-section-geo'),
+            calendar: document.getElementById('qr-section-calendar')
+          };
+
+          let detectedType = 'text';
+
+          // Detect Type and populate fields
+          if (content.startsWith('WIFI:')) {
+            detectedType = 'wifi';
+            const unescapeWifi = (str) => (str || '').replace(/\\(:|;|\\|,)/g, '$1');
+            const matchS = content.match(/S:([^;]*)/);
+            const matchT = content.match(/T:([^;]*)/);
+            const matchP = content.match(/P:([^;]*)/);
+            const matchH = content.match(/H:([^;]*)/);
+
+            if (document.getElementById('qrWifiSsid')) document.getElementById('qrWifiSsid').value = matchS ? unescapeWifi(matchS[1]) : '';
+            if (document.getElementById('qrWifiEncryption')) document.getElementById('qrWifiEncryption').value = matchT ? matchT[1] : 'WPA';
+            if (document.getElementById('qrWifiPassword')) document.getElementById('qrWifiPassword').value = matchP ? unescapeWifi(matchP[1]) : '';
+            if (document.getElementById('qrWifiHidden')) document.getElementById('qrWifiHidden').checked = matchH ? matchH[1] === 'true' : false;
+
+          } else if (content.startsWith('BEGIN:VCARD')) {
+            detectedType = 'contact';
+            const getValue = (key) => {
+              const match = content.match(new RegExp(`${key}:(.*)`));
+              return match ? match[1] : '';
+            };
+            if (document.getElementById('qrContactName')) document.getElementById('qrContactName').value = getValue('FN') || getValue('N');
+            if (document.getElementById('qrContactOrg')) document.getElementById('qrContactOrg').value = getValue('ORG');
+            if (document.getElementById('qrContactTitle')) document.getElementById('qrContactTitle').value = getValue('TITLE');
+            if (document.getElementById('qrContactPhone')) document.getElementById('qrContactPhone').value = getValue('TEL');
+            if (document.getElementById('qrContactEmail')) document.getElementById('qrContactEmail').value = getValue('EMAIL');
+            if (document.getElementById('qrContactUrl')) document.getElementById('qrContactUrl').value = getValue('URL');
+            if (document.getElementById('qrContactAddress')) document.getElementById('qrContactAddress').value = getValue('ADR');
+
+          } else if (content.toLowerCase().startsWith('tel:')) {
+            detectedType = 'phone';
+            if (document.getElementById('qrPhone')) document.getElementById('qrPhone').value = content.substring(4);
+
+          } else if (content.startsWith('SMSTO:')) {
+            detectedType = 'sms';
+            const parts = content.split(':');
+            if (parts.length >= 2) {
+              if (document.getElementById('qrSmsPhone')) document.getElementById('qrSmsPhone').value = parts[1];
+              if (document.getElementById('qrSmsMessage')) document.getElementById('qrSmsMessage').value = parts.slice(2).join(':');
+            }
+
+          } else if (content.toLowerCase().startsWith('mailto:')) {
+            detectedType = 'email';
+            try {
+              const url = new URL(content.replace('mailto:', 'http://dummy.com/'));
+              if (document.getElementById('qrEmailTo')) document.getElementById('qrEmailTo').value = content.match(/^mailto:([^?]*)/)[1];
+              if (document.getElementById('qrEmailSubject')) document.getElementById('qrEmailSubject').value = url.searchParams.get('subject') || '';
+              if (document.getElementById('qrEmailBody')) document.getElementById('qrEmailBody').value = url.searchParams.get('body') || '';
+            } catch (e) { console.error("Error parsing mailto", e); }
+
+          } else if (content.startsWith('geo:')) {
+            detectedType = 'geo';
+            const parts = content.substring(4).split(',');
+            if (document.getElementById('qrGeoLat')) document.getElementById('qrGeoLat').value = parts[0];
+            if (document.getElementById('qrGeoLong')) document.getElementById('qrGeoLong').value = parts[1];
+
+          } else if (content.startsWith('BEGIN:VEVENT')) {
+            detectedType = 'calendar';
+            // Parsing omitted
+          } else {
+            detectedType = 'text';
+            if (document.getElementById('qrContentInput')) {
+              document.getElementById('qrContentInput').value = content;
+            }
+          }
+
+          if (qrTypeSelect) {
+            qrTypeSelect.value = detectedType;
+            // Trigger visibility update
+            Object.values(sections).forEach(s => { if (s) s.style.display = 'none'; });
+            if (sections[detectedType]) sections[detectedType].style.display = (detectedType === 'wifi' || detectedType === 'contact' || detectedType === 'sms' || detectedType === 'email' || detectedType === 'geo' || detectedType === 'calendar' || detectedType === 'phone') ? 'flex' : 'block';
           }
         }
         // Make sure image controls are hidden
