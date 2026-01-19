@@ -186,6 +186,136 @@ document.addEventListener("DOMContentLoaded", () => {
     printButton.addEventListener("click", printLabel);
   }
 
+  // Live Preview Logic (Standard Behavior)
+  let previewCanvasElement = null;
+
+  function initLivePreview() {
+    // 1. Initial Render
+    updatePreview();
+
+    // 2. Add Listeners for Live Update
+    const fabricCanvas = window.getFabricCanvas();
+    if (fabricCanvas) {
+      fabricCanvas.on('object:modified', updatePreview);
+      fabricCanvas.on('object:added', updatePreview);
+      fabricCanvas.on('object:removed', updatePreview);
+      fabricCanvas.on('selection:updated', updatePreview);
+      fabricCanvas.on('selection:created', updatePreview);
+      fabricCanvas.on('selection:cleared', updatePreview);
+
+      // Debounce text changes
+      let timeout;
+      fabricCanvas.on('text:changed', () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(updatePreview, 100);
+      });
+    }
+  }
+
+  // Initialize preview when scripts are ready
+  // A simple timeout or event hook might be needed if fabric canvas isn't ready immediately.
+  // Assuming fabric_editor.js runs before or initLivePreview can safely bind active listeners.
+  // Since we use window.getFabricCanvas(), we can try running it.
+  // Better yet, wait a moment or check if fabricCanvas is available.
+  if (window.getFabricCanvas()) {
+    initLivePreview();
+  } else {
+    // Wait for DOMContentLoaded or similar if needed, or just try to hook
+    window.addEventListener('load', initLivePreview);
+  }
+
+  function updatePreview() {
+    const fabricCanvas = window.getFabricCanvas();
+    if (!fabricCanvas) return;
+
+    // Auto-hide preview if an object is selected
+    if (fabricCanvas.getActiveObject()) {
+      if (previewCanvasElement) {
+        previewCanvasElement.style.display = 'none';
+      }
+      return;
+    }
+
+    // 1. Generate Bitmap
+    const printerSelect = document.getElementById("printerSelect");
+    const supportedPrinters = window.supportedPrinters;
+
+    // Handle case where vars might not be ready yet
+    if (!printerSelect || !supportedPrinters) return;
+
+    // Safety check for printer selection
+    const printerIndex = printerSelect.value;
+    if (!supportedPrinters[printerIndex]) return;
+
+    const printerPx = supportedPrinters[printerIndex].px;
+
+    let heightToUse = printerPx;
+    if (window.fabricEditor) {
+      heightToUse = printerPx;
+    }
+
+    const infinitePaperCheckbox = document.getElementById("infinitePaperCheckbox");
+    const isInfinitePaper = infinitePaperCheckbox ? infinitePaperCheckbox.checked : false;
+
+    // Use constructBitmap ensuring 1 copy
+    const bitmap = constructBitmap(heightToUse, 1, isInfinitePaper, true);
+
+    if (!bitmap || bitmap.length === 0) return;
+
+    const bitmapHeight = bitmap.length;
+    const bitmapWidth = bitmap[0].length;
+
+    // 2. Create/Update Preview Canvas
+    if (!previewCanvasElement) {
+      previewCanvasElement = document.createElement("canvas");
+      // Style for overlay
+      previewCanvasElement.style.position = "absolute";
+      previewCanvasElement.style.top = "0";
+      previewCanvasElement.style.left = "0";
+
+      // Crucial: Pointer events NONE allows clicks to pass through to the upper-canvas (selection handles)
+      previewCanvasElement.style.pointerEvents = "none";
+
+      previewCanvasElement.style.backgroundColor = "white";
+      previewCanvasElement.style.imageRendering = "pixelated";
+      previewCanvasElement.className = "preview-canvas";
+
+      // We need to insert this BEFORE the upper-canvas but AFTER the lower-canvas
+      const fabricCanvas = window.getFabricCanvas();
+      if (fabricCanvas) {
+        const upperCanvas = fabricCanvas.upperCanvasEl;
+        const container = upperCanvas.parentNode;
+        // Insert before upper canvas
+        container.insertBefore(previewCanvasElement, upperCanvas);
+      }
+    }
+
+    // 3. Draw Binary Data to Preview Canvas
+    previewCanvasElement.width = bitmapWidth;
+    previewCanvasElement.height = bitmapHeight;
+    const ctx = previewCanvasElement.getContext("2d");
+
+    const previewData = ctx.createImageData(bitmapWidth, bitmapHeight);
+    const pData = previewData.data;
+
+    for (let y = 0; y < bitmapHeight; y++) {
+      const rowString = bitmap[y];
+      for (let x = 0; x < bitmapWidth; x++) {
+        const char = rowString[x];
+        const pixelColor = (char === '1') ? 0 : 255;
+
+        const index = (y * bitmapWidth + x) * 4;
+        pData[index] = pixelColor;     // R
+        pData[index + 1] = pixelColor; // G
+        pData[index + 2] = pixelColor; // B
+        pData[index + 3] = 255;        // Alpha
+      }
+    }
+
+    ctx.putImageData(previewData, 0, 0);
+    previewCanvasElement.style.display = "block";
+  }
+
   // --- Printer Selection Modal Logic ---
   const startupModal = document.getElementById("startupModal");
   const printerSelect = document.getElementById("printerSelect");

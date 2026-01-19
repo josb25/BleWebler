@@ -115,18 +115,21 @@ function log(message) {
 
 
 
-function constructBitmap(canvasHeight) {
+function rasterizeCanvas(canvasHeight, isInfinitePaper, ignoreSelection = false) {
   const fabricCanvas = getFabricCanvas();
   if (!fabricCanvas) {
     log("Fabric.js canvas not initialized.");
     return null;
   }
 
-  // Save current selection and deselect
+  // Save current selection and deselect only if not ignoring selection
   const activeObject = fabricCanvas.getActiveObject();
-  fabricCanvas.discardActiveObject();
-  fabricCanvas.requestRenderAll();
-  fabricCanvas.renderAll(); // Ensure render happens synchronously
+
+  if (!ignoreSelection) {
+    fabricCanvas.discardActiveObject();
+    fabricCanvas.requestRenderAll();
+    fabricCanvas.renderAll(); // Ensure render happens synchronously
+  }
 
   const tempCanvas = document.createElement("canvas");
   const tempCtx = tempCanvas.getContext("2d");
@@ -137,19 +140,31 @@ function constructBitmap(canvasHeight) {
 
   // Render the fabric canvas content onto the temporary canvas
   fabricCanvas.backgroundColor = '#ffffff'; // Ensure white background
-  fabricCanvas.renderAll(); // Re-render to ensure background is applied if needed
+
+  // Force a render of the lower canvas to ensure it's up to date
+  fabricCanvas.renderAll();
   tempCtx.drawImage(fabricCanvas.getElement(), 0, 0, canvasWidth, canvasHeight);
 
-  // Restore selection
-  if (activeObject) {
+  // Restore selection if we modified it
+  if (!ignoreSelection && activeObject) {
     fabricCanvas.setActiveObject(activeObject);
     fabricCanvas.requestRenderAll();
   }
 
-  const imgData = tempCtx.getImageData(0, 0, canvasWidth, canvasHeight).data;
+  const imgData = tempCtx.getImageData(0, 0, canvasWidth, canvasHeight);
+  return imgData;
+}
+
+function constructBitmap(canvasHeight, copyCount, isInfinitePaper, ignoreSelection = false) {
+  const imgDataObj = rasterizeCanvas(canvasHeight, isInfinitePaper, ignoreSelection);
+  if (!imgDataObj) return null;
+
+  const imgData = imgDataObj.data;
+  const canvasWidth = imgDataObj.width;
+  const height = imgDataObj.height;
 
   const bitmap = [];
-  for (let y = 0; y < canvasHeight; y++) {
+  for (let y = 0; y < height; y++) {
     let row = "";
     for (let x = 0; x < canvasWidth; x++) {
       const i = (y * canvasWidth + x) * 4;
@@ -158,5 +173,5 @@ function constructBitmap(canvasHeight) {
     }
     bitmap.push(row);
   }
-  return bitmap
+  return bitmap;
 }

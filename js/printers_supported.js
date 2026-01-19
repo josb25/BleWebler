@@ -1,5 +1,5 @@
 // Supported printers (with namePrefix-based filters)
-const supportedPrinters = [
+window.supportedPrinters = [
     {
         name: "Marklife_P12",
         namePrefix: "P12_", //prefix to search for in the name while connecting via BLE
