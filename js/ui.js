@@ -570,6 +570,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlPaddingLeft = urlParams.get('paddingLeft');
     const urlPaddingRight = urlParams.get('paddingRight');
 
+    // Infinite Paper Checkbox Logic
+    if (infinitePaperCheckbox && paperWidthInput && paperWidthContainer) {
+      infinitePaperCheckbox.addEventListener("change", (e) => {
+        if (e.target.checked) {
+          paperWidthInput.removeAttribute("max");
+          paperWidthContainer.style.display = 'none'; // Hide width input
+          if (resizeHandle) resizeHandle.classList.remove('hidden');
+          if (dimensionControls) dimensionControls.classList.remove('hidden');
+          // Update dimension inputs when enabling infinite paper
+          updateDimensionInputs();
+        } else {
+          paperWidthInput.setAttribute("max", "100"); // Restore default max
+          if (parseFloat(paperWidthInput.value) > 100) {
+            paperWidthInput.value = 100; // Cap value if it exceeds max
+          }
+          paperWidthContainer.style.display = 'block'; // Show width input
+          if (resizeHandle) resizeHandle.classList.add('hidden');
+          if (dimensionControls) dimensionControls.classList.add('hidden');
+        }
+      });
+    }
+
     if (urlPrinter !== null && urlWidth !== null && urlHeight !== null) {
       // Apply settings from URL
       const pIndex = parseInt(urlPrinter);
@@ -633,28 +655,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (homeTitle) {
       homeTitle.addEventListener("click", () => {
         window.location.href = window.location.pathname;
-      });
-    }
-
-    // Infinite Paper Checkbox Logic
-    if (infinitePaperCheckbox && paperWidthInput && paperWidthContainer) {
-      infinitePaperCheckbox.addEventListener("change", (e) => {
-        if (e.target.checked) {
-          paperWidthInput.removeAttribute("max");
-          paperWidthContainer.style.display = 'none'; // Hide width input
-          if (resizeHandle) resizeHandle.classList.remove('hidden');
-          if (dimensionControls) dimensionControls.classList.remove('hidden');
-          // Update dimension inputs when enabling infinite paper
-          updateDimensionInputs();
-        } else {
-          paperWidthInput.setAttribute("max", "100"); // Restore default max
-          if (parseFloat(paperWidthInput.value) > 100) {
-            paperWidthInput.value = 100; // Cap value if it exceeds max
-          }
-          paperWidthContainer.style.display = 'block'; // Show width input
-          if (resizeHandle) resizeHandle.classList.add('hidden');
-          if (dimensionControls) dimensionControls.classList.add('hidden');
-        }
       });
     }
 
