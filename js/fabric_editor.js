@@ -455,6 +455,7 @@ function addTextToCanvas() {
     fontStyle: 'normal',  // Default to normal, will be set by toggleStyle if active
     underline: false,     // Default to false, will be set by toggleStyle if active
     textBaseline: 'alphabetic', // Explicitly set a valid textBaseline
+    snapAngle: 15.0,      // Rotate in 15° steps
   });
 
   // Center vertically within padding bounds
