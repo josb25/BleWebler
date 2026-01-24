@@ -571,8 +571,11 @@ function addQRCodeToCanvas() {
         isQRCode: true,
         qrContent: qrContent, // Store the content for potential re-editing
         qrModuleCount: moduleCount,
-        lockUniScaling: true
+        lockUniScaling: true,
+        lockScalingFlip: true,
       });
+
+      img.setControlsVisibility({ mtr: false });
 
       canvas.add(img);
       canvas.setActiveObject(img);
