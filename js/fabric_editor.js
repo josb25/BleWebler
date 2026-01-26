@@ -149,6 +149,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Save state when starting to transform an object
+  canvas.on('before:transform', (e) => {
+    const obj = e.transform.target;
+    obj.lastState = {
+      top: obj.top,
+      left: obj.left,
+      scaleX: obj.scaleX,
+      scaleY: obj.scaleY,
+    };
+  });
+
+  canvas.on('object:modified', (e) => {
+    const obj = e.target;
+    obj.setCoords();
+    delete obj.lastState;
+  });
+
   // Constrain object scaling to stay within padding bounds
   canvas.on('object:scaling', (e) => {
     const obj = e.target;
@@ -170,9 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
         baseDimension = obj.width || 1;
       }
 
-      let moduleSize = Math.round(currentScaledDimension / obj.qrModuleCount);
-      if (moduleSize < 1) moduleSize = 1;
-
+      const moduleSize = Math.max(1, Math.round(currentScaledDimension / obj.qrModuleCount));
       const newScale = (moduleSize * obj.qrModuleCount) / baseDimension;
 
       // Update scale while maintaining the correct anchor point
@@ -216,99 +231,39 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Update cached bounding box
+    obj.setCoords();
+
+    const objBBox = obj.getBoundingRect();
     const bounds = getPaddingBounds();
 
-    // Get object dimensions after scaling
-    const objWidth = obj.getScaledWidth();
-    const objHeight = obj.getScaledHeight();
-
-    // Constrain position if object would go outside bounds
-    let newLeft = obj.left;
-    let newTop = obj.top;
-
-    // Left constraint
-    if (newLeft < bounds.left) {
-      newLeft = bounds.left;
-    }
-    // Right constraint
-    if (newLeft + objWidth > bounds.right) {
-      newLeft = bounds.right - objWidth;
-    }
-    // Top constraint
-    if (newTop < bounds.top) {
-      newTop = bounds.top;
-    }
-    // Bottom constraint
-    if (newTop + objHeight > bounds.bottom) {
-      newTop = bounds.bottom - objHeight;
+    // Revert changes in scale and position if exceeding boundaries,
+    // but always allow to scale object down
+    if ((obj.scaleX > obj.lastState.scaleX ||
+          obj.scaleY > obj.lastState.scaleY) &&
+        (objBBox.top < bounds.top ||
+          objBBox.left < bounds.left ||
+          objBBox.top + objBBox.height > bounds.bottom ||
+          objBBox.left + objBBox.width > bounds.right)) {
+      obj.top = obj.lastState.top;
+      obj.left = obj.lastState.left;
+      obj.scaleX = obj.lastState.scaleX;
+      obj.scaleY = obj.lastState.scaleY;
+      obj.setCoords();
+      return;
     }
 
-    // If position needs adjustment, adjust scale instead to keep object within bounds
-    if (newLeft !== obj.left || newTop !== obj.top) {
-      // Calculate maximum allowed dimensions
-      const maxWidth = bounds.right - bounds.left;
-      const maxHeight = bounds.bottom - bounds.top;
+    constrainObjectToCanvas(obj);
 
-      // Limit scale to fit within bounds
-      const scaleX = obj.scaleX;
-      const scaleY = obj.scaleY;
-      const baseWidth = obj.width;
-      const baseHeight = obj.height;
-
-      // For QR codes, we also need to snap when constraining to bounds
-      let newScaleX = Math.min(scaleX, maxWidth / baseWidth);
-      let newScaleY = Math.min(scaleY, maxHeight / baseHeight);
-
-      if (obj.isQRCode && obj.qrModuleCount) {
-        let moduleSizeX = Math.floor((newScaleX * baseWidth) / obj.qrModuleCount);
-        if (moduleSizeX < 1) moduleSizeX = 1;
-        newScaleX = (moduleSizeX * obj.qrModuleCount) / baseWidth;
-        newScaleY = newScaleX; // Keep aspect ratio
-      }
-
-      obj.set({
-        scaleX: newScaleX,
-        scaleY: newScaleY,
-        left: Math.max(bounds.left, Math.min(newLeft, bounds.right - obj.getScaledWidth())),
-        top: Math.max(bounds.top, Math.min(newTop, bounds.bottom - obj.getScaledHeight()))
-      });
-    }
+    obj.lastState.top = obj.top;
+    obj.lastState.left = obj.left;
+    obj.lastState.scaleX = obj.scaleX;
+    obj.lastState.scaleY = obj.scaleY;
   });
 
   // Constrain object movement to stay within padding bounds
   canvas.on('object:moving', (e) => {
-    const obj = e.target;
-    const bounds = getPaddingBounds();
-
-    // Get object dimensions
-    const objWidth = obj.getScaledWidth();
-    const objHeight = obj.getScaledHeight();
-
-    // Constrain position
-    let newLeft = obj.left;
-    let newTop = obj.top;
-
-    // Left constraint
-    if (newLeft < bounds.left) {
-      newLeft = bounds.left;
-    }
-    // Right constraint
-    if (newLeft + objWidth > bounds.right) {
-      newLeft = bounds.right - objWidth;
-    }
-    // Top constraint
-    if (newTop < bounds.top) {
-      newTop = bounds.top;
-    }
-    // Bottom constraint
-    if (newTop + objHeight > bounds.bottom) {
-      newTop = bounds.bottom - objHeight;
-    }
-
-    obj.set({
-      left: newLeft,
-      top: newTop
-    });
+    constrainObjectToCanvas(e.target);
   });
 
   // Event listeners for styling controls
@@ -381,6 +336,43 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+function constrainObjectToCanvas(obj) {
+  const bounds = getPaddingBounds();
+
+  // Update cached bounding box
+  obj.setCoords();
+
+  // Get object dimensions
+  const objBBox = obj.getBoundingRect();
+  const objWidth = objBBox.width;
+  const objHeight = objBBox.height;
+
+  // Constrain position
+  let newLeft = objBBox.left;
+  let newTop = objBBox.top;
+
+  // Left constraint
+  if (newLeft < bounds.left) {
+    newLeft = bounds.left;
+  }
+  // Right constraint
+  if (newLeft + objWidth > bounds.right) {
+    newLeft = bounds.right - objWidth;
+  }
+  // Top constraint
+  if (newTop < bounds.top) {
+    newTop = bounds.top;
+  }
+  // Bottom constraint
+  if (newTop + objHeight > bounds.bottom) {
+    newTop = bounds.bottom - objHeight;
+  }
+
+  obj.left += newLeft - objBBox.left;
+  obj.top += newTop - objBBox.top;
+  obj.setCoords();
+}
+
 function removeEmptyTextObjects(e) {
   if (e.deselected) {
     e.deselected.forEach(obj => {
@@ -439,6 +431,7 @@ function reDitherImageOnScale(fabricImageObject) {
   };
   tempImage.src = originalImageDataURL;
 }
+
 function addTextToCanvas() {
   const textContent = 'Type here';
 
@@ -578,8 +571,11 @@ function addQRCodeToCanvas() {
         isQRCode: true,
         qrContent: qrContent, // Store the content for potential re-editing
         qrModuleCount: moduleCount,
-        lockUniScaling: true
+        lockUniScaling: true,
+        lockScalingFlip: true,
       });
+
+      img.setControlsVisibility({ mtr: false });
 
       canvas.add(img);
       canvas.setActiveObject(img);
