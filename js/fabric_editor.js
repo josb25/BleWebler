@@ -2,6 +2,7 @@ let canvas;
 let fontSizeInput;
 let fontFamilyInput;
 let ditheringAlgorithmSelect; // New reference
+let paddingIgnoreCheckbox;
 
 // Padding state (in pixels)
 let paddingState = {
@@ -34,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
   fontSizeInput = document.getElementById('fontSize');
   fontFamilyInput = document.getElementById('fontFamilyInput');
   ditheringAlgorithmSelect = document.getElementById('ditheringAlgorithmSelect'); // Initialize new reference
+  paddingIgnoreCheckbox = document.getElementById('paddingIgnoreCheckbox');
 
   // QR Code content input event listener
   const qrContentInput = document.getElementById('qrContentInput');
@@ -231,6 +233,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    if (arePaddingsIgnored()) return;
+
     // Update cached bounding box
     obj.setCoords();
 
@@ -263,6 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Constrain object movement to stay within padding bounds
   canvas.on('object:moving', (e) => {
+    if (arePaddingsIgnored()) return;
     constrainObjectToCanvas(e.target);
   });
 
@@ -371,6 +376,10 @@ function constrainObjectToCanvas(obj) {
   obj.left += newLeft - objBBox.left;
   obj.top += newTop - objBBox.top;
   obj.setCoords();
+}
+
+function arePaddingsIgnored() {
+  return paddingIgnoreCheckbox ? paddingIgnoreCheckbox.checked : false;
 }
 
 function removeEmptyTextObjects(e) {

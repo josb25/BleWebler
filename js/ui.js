@@ -559,6 +559,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const paddingLeftInput = document.getElementById('paddingLeft');
     const paddingRightInput = document.getElementById('paddingRight');
 
+    const paddingIgnoreCheckbox = document.getElementById("paddingIgnoreCheckbox");
+
     // Check for URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const urlPrinter = urlParams.get('printer');
@@ -569,6 +571,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlPaddingBottom = urlParams.get('paddingBottom');
     const urlPaddingLeft = urlParams.get('paddingLeft');
     const urlPaddingRight = urlParams.get('paddingRight');
+    const urlPaddingIgnore = urlParams.get('paddingIgnore') === 'true';
 
     // Infinite Paper Checkbox Logic
     if (infinitePaperCheckbox && paperWidthInput && paperWidthContainer) {
@@ -629,6 +632,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // No URL params, show modal
       startupModal.classList.add("show");
     }
+
+    if (paddingIgnoreCheckbox) paddingIgnoreCheckbox.checked = urlPaddingIgnore;
 
     if (settingsBtn) {
       settingsBtn.addEventListener("click", () => {
@@ -701,6 +706,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (paddingRightInput) {
       paddingRightInput.addEventListener('change', updatePaddingFromInputs);
       paddingRightInput.addEventListener('blur', updatePaddingFromInputs);
+    }
+    if (paddingIgnoreCheckbox) {
+      paddingIgnoreCheckbox.addEventListener('change', () => {
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('paddingIgnore', paddingIgnoreCheckbox.checked);
+        window.history.replaceState({}, '', newUrl);
+      });
     }
 
     // 3. Handle Start Button Click
