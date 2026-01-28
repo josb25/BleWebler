@@ -495,6 +495,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  const fitContentBtn = document.getElementById("fitContentBtn");
+  if (fitContentBtn) {
+    fitContentBtn.addEventListener("click", () => {
+      if (!window.fabricEditor) return;
+      window.fabricEditor.fitContent();
+      updatePreview();
+    });
+  }
+
   if (startupModal && printerSelect && startBtn) {
     // 1. Populate Printer List
     if (typeof supportedPrinters !== 'undefined') {
