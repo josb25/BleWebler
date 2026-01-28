@@ -280,58 +280,56 @@ document.addEventListener("DOMContentLoaded", () => {
   if (imageUploadInput) {
     imageUploadInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (event) {
-          const imgDataUrl = event.target.result;
-          // Create a temporary image element to get ImageData
-          const tempImage = new Image();
-          tempImage.onload = function () {
-            const canvasWidth = canvas.getWidth();
-            const canvasHeight = canvas.getHeight();
+      if (!file) return;
 
-            // Calculate scaling factors
-            const scaleX = canvasWidth / tempImage.width;
-            const scaleY = canvasHeight / tempImage.height;
-            const initialScale = Math.min(scaleX, scaleY, 1); // Only scale down if image is larger than canvas
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imgDataUrl = event.target.result;
 
-            const targetWidth = tempImage.width * initialScale;
-            const targetHeight = tempImage.height * initialScale;
+        // Use a temporary image element to get ImageData
+        const tempImage = new Image();
+        tempImage.onload = function () {
+          // Scale to fit into canvas
+          const bounds = getPaddingBounds();
+          const scaleX = (bounds.right - bounds.left) / tempImage.width;
+          const scaleY = (bounds.bottom - bounds.top) / tempImage.height;
+          const initialScale = Math.min(scaleX, scaleY, 1);  // Only scale down if image is larger than canvas
+          const targetWidth = tempImage.width * initialScale;
+          const targetHeight = tempImage.height * initialScale;
 
-            // Get ImageData at the target scaled size
-            const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight, false);
+          const scaledImageDataURL = imageDataToDataURL(getImageDataFromImage(tempImage, targetWidth, targetHeight, false));
 
-            // Default dithering algorithm for now
-            const currentDitheringAlgorithm = 'floyd-steinberg';
-            const ditheredImageData = ditheringAlgorithms[currentDitheringAlgorithm](toGrayscale(originalImageData));
-            const ditheredDataURL = imageDataToDataURL(ditheredImageData);
+          fabric.Image.fromURL(scaledImageDataURL, (img) => {
+            const bounds = getPaddingBounds();
+            const contentHeight = bounds.bottom - bounds.top;
 
-            fabric.Image.fromURL(ditheredDataURL, function (img) {
-              img.originalImageDataURL = imgDataUrl; // Store original URL
-              img.ditheringAlgorithm = currentDitheringAlgorithm; // Store selected algorithm
-              img.originalWidth = tempImage.width; // Store original width
-              img.originalHeight = tempImage.height; // Store original height
-
-              const bounds = getPaddingBounds();
-              const contentHeight = bounds.bottom - bounds.top;
-
-              img.set({
-                scaleX: 1, // Image data is already scaled, so set base scale to 1
-                scaleY: 1, // Image data is already scaled, so set base scale to 1
-                left: bounds.left, // Align to left padding boundary
-                top: bounds.top + (contentHeight - img.height) / 2, // Vertically center within padding bounds
-                isUploadedImage: true
-              }); canvas.add(img);
-              canvas.setActiveObject(img);
-              canvas.renderAll();
-            }, {
-              crossOrigin: 'anonymous' // Important for loading external images, though data URL might not strictly need it
+            img.set({
+              scaleX: 1,
+              scaleY: 1,
+              left: bounds.left,
+              top: bounds.top + (contentHeight - img.height) / 2,  // Vertically center within padding bounds
+              originalImageDataURL: imgDataUrl,
+              ditheringAlgorithm: 'floyd-steinberg',
+              originalWidth: tempImage.width,
+              originalHeight: tempImage.height,
+              isUploadedImage: true,
             });
-          }; tempImage.src = imgDataUrl; // This will trigger tempImage.onload
-          e.target.value = ''; // Clear the input so the same file can be uploaded again
+
+            canvas.add(img);
+            canvas.setActiveObject(img);
+
+            applyDitheringToImage(img);
+          }, {
+            // Important for loading external images, though data URL might not strictly need it
+            crossOrigin: 'anonymous'
+          });
         };
-        reader.readAsDataURL(file);
-      }
+        tempImage.src = imgDataUrl;
+
+        // Clear the input so the same file can be uploaded again
+        e.target.value = '';
+      };
+      reader.readAsDataURL(file);
     });
   }
 });
@@ -387,49 +385,35 @@ function removeEmptyTextObjects(e) {
 function handleObjectModified(e) {
   const modifiedObject = e.target;
   if (modifiedObject && modifiedObject.type === 'image') {
-    reDitherImageOnScale(modifiedObject);
+    applyDitheringToImage(modifiedObject);
   }
   updateTextControls(); // Always update text controls regardless of object type
 }
 
-// Function to re-dither an image when it's scaled on the canvas
-function reDitherImageOnScale(fabricImageObject) {
-  if (!fabricImageObject.originalImageDataURL || !fabricImageObject.ditheringAlgorithm) {
-    return; // Cannot re-dither without original data or algorithm
-  }
-
-  const originalImageDataURL = fabricImageObject.originalImageDataURL;
-  const ditheringAlgorithm = fabricImageObject.ditheringAlgorithm;
+function applyDitheringToImage(obj) {
+  if (!obj) return;
+  if (obj.type !== 'image') return;
+  if (!obj.originalImageDataURL) return;
+  if (!obj.ditheringAlgorithm) return;
 
   const tempImage = new Image();
   tempImage.onload = function () {
-    const targetWidth = fabricImageObject.getScaledWidth();
-    const targetHeight = fabricImageObject.getScaledHeight();
-    const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight, false);
-    const ditheredImageData = ditheringAlgorithms[ditheringAlgorithm](toGrayscale(originalImageData)); const ditheredDataURL = imageDataToDataURL(ditheredImageData);
+    const targetWidth = obj.getScaledWidth();
+    const targetHeight = obj.getScaledHeight();
+    const scaledImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight, false);
 
-    // Get current scale and position to re-apply after source change
-    const currentScaleX = fabricImageObject.scaleX;
-    const currentScaleY = fabricImageObject.scaleY;
-    const currentLeft = fabricImageObject.left;
-    const currentTop = fabricImageObject.top;
-    const currentAngle = fabricImageObject.angle;
+    const ditheredImageData = ditheringAlgorithms[obj.ditheringAlgorithm](toGrayscale(scaledImageData));
+    const ditheredDataURL = imageDataToDataURL(ditheredImageData);
 
-    // Use setSrc to update the image data without replacing the object
-    fabricImageObject.setSrc(ditheredDataURL, function () {
-      // After setSrc, Fabric.js has updated its internal width/height to the dithered image's dimensions.
-      // Since the dithered image is already scaled to the desired size, set scaleX/Y to 1.
-      fabricImageObject.set({
-        scaleX: 1, // Dithered image data is already scaled to current object size
-        scaleY: 1, // Dithered image data is already scaled to current object size
-        left: currentLeft,     // Re-apply position
-        top: currentTop,       // Re-apply position
-        angle: currentAngle,   // Re-apply rotation
+    obj.setSrc(ditheredDataURL, () => {
+      obj.set({
+        scaleX: 1,
+        scaleY: 1,
       });
       canvas.renderAll();
     });
   };
-  tempImage.src = originalImageDataURL;
+  tempImage.src = obj.originalImageDataURL;
 }
 
 function addTextToCanvas() {
@@ -992,45 +976,9 @@ function clearTextControls() {
 // Function to re-apply dithering to the active image
 function applyDitheringToActiveImage() {
   const activeObject = canvas.getActiveObject();
-  if (activeObject && activeObject.type === 'image' && activeObject.originalImageDataURL) {
-    const selectedAlgorithm = ditheringAlgorithmSelect.value;
-    activeObject.ditheringAlgorithm = selectedAlgorithm; // Update the stored algorithm
-
-    const tempImage = new Image();
-    tempImage.onload = function () {
-      const targetWidth = activeObject.getScaledWidth();
-      const targetHeight = activeObject.getScaledHeight();
-      const originalImageData = getImageDataFromImage(tempImage, targetWidth, targetHeight);
-      // Apply dithering (to grayscale first)
-      const ditheredImageData = ditheringAlgorithms[selectedAlgorithm](toGrayscale(originalImageData)); const ditheredDataURL = imageDataToDataURL(ditheredImageData);
-
-      // Preserve current position and scale
-      const currentScaleX = activeObject.scaleX;
-      const currentScaleY = activeObject.scaleY;
-      const currentLeft = activeObject.left;
-      const currentTop = activeObject.top;
-
-      fabric.Image.fromURL(ditheredDataURL, function (newImg) {
-        // Replace the old image object with the new dithered one
-        canvas.remove(activeObject);
-        // The newImg's intrinsic width/height are already scaled to the desired size.
-        // So, we set scaleX/Y to 1 and re-apply position.
-        newImg.set({
-          scaleX: 1,
-          scaleY: 1,
-          left: currentLeft,
-          top: currentTop,
-          isUploadedImage: true,
-          originalImageDataURL: activeObject.originalImageDataURL, // Keep original reference
-          ditheringAlgorithm: activeObject.ditheringAlgorithm, // Keep selected algorithm
-        });
-        canvas.add(newImg);
-        canvas.setActiveObject(newImg);
-        canvas.renderAll();
-      });
-    };
-    tempImage.src = activeObject.originalImageDataURL;
-  }
+  if (!activeObject || activeObject.type !== 'image' || !activeObject.originalImageDataURL) return;
+  activeObject.ditheringAlgorithm = ditheringAlgorithmSelect.value;
+  applyDitheringToImage(activeObject);
 }
 
 // Expose canvas for utils.js to access it
