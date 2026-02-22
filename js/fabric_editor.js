@@ -23,7 +23,7 @@ let qrUpdateTimer = null; // Debounce timer for QR updates
 
 document.addEventListener("DOMContentLoaded", () => {
   canvas = new fabric.Canvas('fabricCanvas', {
-    enableRetinaScaling: true,
+    enableRetinaScaling: false,
     objectCaching: false,
     allowTouchScrolling: true
   });
@@ -240,11 +240,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Revert changes in scale and position if exceeding boundaries,
     // but always allow to scale object down
     if ((obj.scaleX > obj.lastState.scaleX ||
-          obj.scaleY > obj.lastState.scaleY) &&
-        (objBBox.top < bounds.top ||
-          objBBox.left < bounds.left ||
-          objBBox.top + objBBox.height > bounds.bottom ||
-          objBBox.left + objBBox.width > bounds.right)) {
+      obj.scaleY > obj.lastState.scaleY) &&
+      (objBBox.top < bounds.top ||
+        objBBox.left < bounds.left ||
+        objBBox.top + objBBox.height > bounds.bottom ||
+        objBBox.left + objBBox.width > bounds.right)) {
       obj.top = obj.lastState.top;
       obj.left = obj.lastState.left;
       obj.scaleX = obj.lastState.scaleX;
