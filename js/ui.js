@@ -202,6 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
       fabricCanvas.on('selection:updated', updatePreview);
       fabricCanvas.on('selection:created', updatePreview);
       fabricCanvas.on('selection:cleared', updatePreview);
+      fabricCanvas.on('canvas:resized', updatePreview);
 
       // Debounce text changes
       let timeout;
