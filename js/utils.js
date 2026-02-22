@@ -1,7 +1,11 @@
-// Build filters from namePrefix
-const bluetoothFilters = supportedPrinters.map(p => ({
-  namePrefix: p.namePrefix
-}));
+// Build filters from namePrefix and inject GATT Services to force LE connection (bypassing BlueZ Classic cache on Linux)
+const bluetoothFilters = supportedPrinters.map(p => {
+  const filter = { namePrefix: p.namePrefix };
+  if (p.optionalServices && p.optionalServices.length > 0) {
+    filter.services = p.optionalServices;
+  }
+  return filter;
+});
 
 // Collect all optional services from all supported printers
 const optionalServices = [
