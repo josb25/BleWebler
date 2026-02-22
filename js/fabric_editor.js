@@ -1163,6 +1163,7 @@ window.fabricEditor = {
       canvas.setHeight(height);
       updatePaddingGuides();
       canvas.renderAll();
+      canvas.fire('canvas:resized', { width: width, height: height });
     }
   },
 
