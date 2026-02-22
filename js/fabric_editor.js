@@ -1177,7 +1177,33 @@ window.fabricEditor = {
 
   getPaddingBounds: function () {
     return getPaddingBounds();
-  }
+  },
+
+  fitContent: function () {
+    if (!canvas) return;
+
+    const objs = canvas.getObjects();
+    if (!objs.length) return;
+
+    let min = Number.MAX_VALUE;
+    let max = Number.MIN_VALUE;
+    objs.forEach((obj) => {
+      if (obj.paddingGuide) return;
+      obj.setCoords();
+      const bbox = obj.getBoundingRect();
+      min = Math.min(min, bbox.left);
+      max = Math.max(max, bbox.left+bbox.width);
+    });
+
+    const offset = min - paddingState.left;
+    objs.forEach((obj) => {
+      if (obj.paddingGuide) return;
+      obj.left -= offset;
+      obj.setCoords();
+    });
+
+    this.updateCanvasSize(max - min + paddingState.left + paddingState.right, canvas.getHeight());
+  },
 };
 
 // Helper function to get padding bounds in pixels
