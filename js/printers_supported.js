@@ -61,5 +61,26 @@ FCC-ID           : 2BHE2-KS4732
 User Manual      : <a href="https://manuals.sit-connect.com/public/articlemanual/2839aca0-43b7-4b17-8695-a7a63d23ecfe.pdf">View Manual</a>`
     },
 
+
+    {
+        name: "Pristar_P15",
+        namePrefix: "P15R_", //prefix to search for in the name while connecting via BLE
+        pattern: /^P15R_.+?_BLE$/, //Pattern used to distinguish this printer from others after connecting via BLE
+        printerClass: MarklifeP12Printer, // Class to instantiate
+        optionalServices: ["0000ff00-0000-1000-8000-00805f9b34fb", "49535343-fe7d-4ae5-8fa9-9fafd205e455"], // UUIDs needed
+        px: 96, //printed width in px
+        dpm: 8, //printer dots per mm (203 dpi)
+        printerInfo:
+            `Name             : Pristar P15
+Pixel Density    : 203 dpi
+Print Width      : 12mm (96 Pixels)
+Paper Width      : 15mm
+Print Tech       : Thermal (Inkless)
+Manufacturer     : Shenzhen Yinxiaoqian Technology Co., Ltd.
+FCC-ID           : 2A2AI-P15
+User Manual      : <a href="https://fcc.report/FCC-ID/2A2AI-P15/7600816.pdf" target="_blank" rel="noopener noreferrer">View Manual</a>`
+    },
+
+    
     // Add more printers here
 ];
