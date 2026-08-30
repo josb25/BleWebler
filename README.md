@@ -1,8 +1,19 @@
 # BleWebler
 
+> [!IMPORTANT]
+> ## BleWebler has been succeeded by BleWebler2
+>
+> Development continues in **[BleWebler2](https://github.com/josb25/BleWebler2)**.
+> You can **[open the new web app here](https://josb25.github.io/BleWebler2/)**.
+>
+> BleWebler2 adds adaptive, printer-independent templates; Marklife and Niimbot
+> support; local/offline operation; and web, Android, desktop, CLI, and MQTT
+> clients. This repository remains available for existing users and historical
+> reference.
+
 **BleWebler** is a browser-based solution for thermal label printing. It leverages the **Web Bluetooth API** to connect directly to supported Bluetooth Low Energy (BLE) printers, eliminating the need for drivers, proprietary apps, or vendor lock-in.
 
-# [**Try it here!**](https://josb25.github.io/BleWebler/)
+# [**Open the legacy BleWebler app**](https://josb25.github.io/BleWebler/)
 
 ---
 
