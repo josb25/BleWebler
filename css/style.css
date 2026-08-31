@@ -328,7 +328,7 @@ select:focus {
 .canvas-container-wrapper {
   display: flex;
   margin-bottom: var(--spacing-md);
-  padding: var(--spacing-md);
+  padding: calc(3*var(--spacing-md)) calc(2*var(--spacing-md));
   background: var(--bg-input);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
