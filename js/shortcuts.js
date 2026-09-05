@@ -88,46 +88,18 @@ function rotateObject(angle) {
 function moveObject(dx, dy) {
   const canvas = window.getFabricCanvas();
   if (!canvas) return;
-  
+
   const activeObject = canvas.getActiveObject();
-  if (activeObject) {
-    const bounds = window.fabricEditor && window.fabricEditor.getPaddingBounds ? 
-      window.fabricEditor.getPaddingBounds() : null;
-    
-    const currentLeft = activeObject.left || 0;
-    const currentTop = activeObject.top || 0;
-    let newLeft = currentLeft + dx;
-    let newTop = currentTop + dy;
-    
-    // Constrain to padding bounds if available
-    if (bounds) {
-      const objWidth = activeObject.getScaledWidth();
-      const objHeight = activeObject.getScaledHeight();
-      
-      // Constrain left
-      if (newLeft < bounds.left) {
-        newLeft = bounds.left;
-      }
-      // Constrain right
-      if (newLeft + objWidth > bounds.right) {
-        newLeft = bounds.right - objWidth;
-      }
-      // Constrain top
-      if (newTop < bounds.top) {
-        newTop = bounds.top;
-      }
-      // Constrain bottom
-      if (newTop + objHeight > bounds.bottom) {
-        newTop = bounds.bottom - objHeight;
-      }
-    }
-    
-    activeObject.set({
-      left: newLeft,
-      top: newTop
-    });
-    canvas.renderAll();
-  }
+  if (!activeObject) return;
+
+  activeObject.setCoords();
+
+  activeObject.left += dx;
+  activeObject.top += dy;
+
+  constrainObjectToCanvas(activeObject);
+
+  canvas.renderAll();
 }
 
 function deselectObject() {
